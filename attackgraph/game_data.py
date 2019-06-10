@@ -135,3 +135,37 @@ class Game_data(object):
 
         denom += 1
         return delta/denom
+
+    def regret(self):
+        nash = self.nasheq[len(self.def_str)]
+        nash_def = nash[0]
+        nash_att = nash[1]
+        num_str = len(nash_att)
+        x1, y1 = np.shape(self.payoffmatrix_def)
+        x2, y2 = np.shape(self.payoffmatrix_att)
+        if x1 != y1 or x1 != x2 or x2 != y2 or x1 != num_str:
+            raise ValueError("Dim of NE does not match payoff matrix.")
+
+        nash_def = np.reshape(nash_def, newshape=(num_str, 1))
+
+        dPayoff = np.round(np.sum(nash_def * self.payoffmatrix_def * nash_att), decimals=2)
+        aPayoff = np.round(np.sum(nash_def * self.payoffmatrix_att * nash_att), decimals=2)
+
+        utils_def = np.round(np.sum(self.payoffmatrix_def * nash_att, axis=1), decimals=2)
+        utils_att = np.round(np.sum(nash_def * self.payoffmatrix_att, axis=0), decimals=2)
+
+        regret_def = utils_def - dPayoff
+        regret_att = utils_att - aPayoff
+
+        regret_def = np.reshape(regret_def, newshape=np.shape(regret_att))
+
+        regret_att = -regret_att
+        regret_def = -regret_def
+
+        return regret_att, regret_def
+
+    def mean_regret(self):
+        regret_att, regret_def = self.regret()
+        mean_reg_att = np.round(np.mean(regret_att[1:]), decimals=2)
+        mean_reg_def = np.round(np.mean(regret_def[1:]), decimals=2)
+        return mean_reg_att, mean_reg_def
