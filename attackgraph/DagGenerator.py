@@ -62,6 +62,9 @@ class Environment(object):
         self.def_reward_shaping = {}
         self.att_reward_shaping['pass_flag'] = False
         self.def_reward_shaping['pass_flag'] = False
+        self.act_len_att = []
+        self.act_len_def = []
+        self.attact_ordered = []
 
     def daggenerator_wo_attrs(self,nodeset,edgeset):
         # if not self.check_nodes_sorted(nodeset):
@@ -635,43 +638,45 @@ class Environment(object):
     # step function while action set building
 
     # attact and defact are attack set and defence set#
-    #TODO: construct opponent's action set, change return to numpy
     def _step(self, done = False):
         # immediate reward for both players
         aReward = 0
         dReward = 0
-        #TODO: set nn_def or nn_att first. Sample from mixed strategy for each episode.
-        #TODO: check the logic of saving act to prev_act
         if self.training_flag == 0: # If the defender is training, attacker builds greedy set. Vice Versa.
             self.attacker.att_greedy_action_builder(self.G, self.T - self.current_time + 1)
+            self.act_len_def.append(len(self.defender.defact))
+            if len(self.act_len_def) == 10000:
+                print("Defender's action set length:", sum(self.act_len_def)/10000)
         elif self.training_flag == 1:
             self.defender.def_greedy_action_builder(self.G, self.T - self.current_time + 1)
+            self.act_len_att.append(len(self.attacker.attact))
+            if len(self.act_len_att) == 10000:
+                print("Attacker's action set length:", sum(self.act_len_att)/10000)
         else:
             raise ValueError("training flag error.")
 
-        attact = self.attacker.attact #TODO: check if action sets are correct!
-        defact = self.defender.defact
-        # if self.training_flag == 0:
-        #     print(defact)
-        # if self.training_flag == 1:
-        #     print(attact)
 
-        # print(self.training_flag)
-        # print('att:', attact)
-        # # print(self.att_reward_shaping.keys())
-        # print('def:', defact)
-        # print(self.def_reward_shaping.keys())
+        attact = self.attacker.attact
+        defact = self.defender.defact
 
         #record which action succeds
-        att_succ_tuple = {}
-        def_succ_tuple = set() # actions on compromised nodes
+        att_succ_tuple = {} # successful action without considering def action. Just probability of activation.
+        def_succ_tuple = set() # actions on compromised nodes, may not be goal.
         # attacker's action
+
+        # if self.training_flag == 1:
+        #     loop = self.attact_ordered
+        # else:
+        #     loop = attact
+
         for attack in attact:
             if isinstance(attack, tuple):
                 # check OR node
                 if self.training_flag == 1:
                     self.att_reward_shaping[attack].v += self.G.edges[attack]['cost']
                 if random.uniform(0, 1) <= self.G.edges[attack]['actProb']:
+                    # if self.G.nodes[attack[-1]]['state'] == 1:
+                    #     continue
                     self.G.nodes[attack[-1]]['state'] = 1
                     att_succ_tuple[attack[-1]] = attack
             else:
@@ -679,8 +684,11 @@ class Environment(object):
                 if self.training_flag == 1:
                     self.att_reward_shaping[attack].v += self.G.nodes[attack]['aCost']
                 if random.uniform(0, 1) <= self.G.nodes[attack]['actProb']:
+                    # if self.G.nodes[attack]['state'] == 1:
+                    #     continue
                     self.G.nodes[attack]['state'] = 1
                     att_succ_tuple[attack] = attack
+
         # defender's action
         for node in defact:
             if self.G.nodes[node]['state'] == 1:
@@ -703,6 +711,16 @@ class Environment(object):
                 if self.G.nodes[node]['state'] == 1:
                     dReward += self.G.nodes[node]['dPenalty']
 
+        if self.training_flag == 1:
+            num_act = len(attact)
+            if num_act == 0:
+                pass_att = aReward
+            else:
+                for i in attact:
+                    self.att_reward_shaping[i].v += aReward/(num_act+1)
+                pass_att = aReward/(num_act+1)
+
+
         if self.training_flag == 0:
             # print('def_succ_tuple:',def_succ_tuple)
             if len(self.defender.defact) == 0:
@@ -716,6 +734,22 @@ class Environment(object):
                     pass_reward = dReward/(deno+1)
                 else:
                     pass_reward = dReward
+
+        ###### TEST ###################
+        if self.training_flag == 1:
+            print('##########################')
+            print('defact:', defact)
+            print('attact:', attact)
+            for i in attact:
+                print(i, ':', self.att_reward_shaping[i].v)
+            print('att_succ_tuple:', att_succ_tuple)
+            print('rs:', self.att_reward_shaping)
+            print('aRew:', aReward)
+            current_state = []
+            for node in self.G.nodes:
+                current_state.append(self.G.nodes[node]['state'])
+            print('current_state:',current_state)
+            print('##########################')
 
         if self.training_flag == 0: # defender is training
             # attacker updates obs
@@ -737,9 +771,10 @@ class Environment(object):
             # attacker updates obs
             self.attacker.update_obs(self.get_att_isActive())
             self.attacker.attact.clear()
+            self.attact_ordered = []
             canAttack, inAttackSet = self.attacker.get_att_canAttack_inAttackSet(self.G)
             self.attacker.update_canAttack(canAttack)
-            return np.array(self.attacker.observation + canAttack + inAttackSet + [self.T - self.current_time]), aReward, done
+            return np.array(self.attacker.observation + canAttack + inAttackSet + [self.T - self.current_time]), pass_att, done
         else:
             raise ValueError("Training flag is set abnormally.")
 
@@ -748,6 +783,7 @@ class Environment(object):
         immediatereward = 0
         # print('__:', action)
         # print('dic:', self.att_reward_shaping)
+        self.attact_ordered.append(action)
         self.attacker.attact.add(action)
         canAttack, inAttackset = self.attacker.get_att_canAttack_inAttackSet(self.G)
         return np.array(self.attacker.observation + canAttack + inAttackset + [self.T - self.current_time]), \
@@ -839,6 +875,7 @@ class Environment(object):
         self.reset_graph()
         self.attacker.reset_att()
         self.defender.reset_def()
+        self.attact_ordered = []
         if self.training_flag == 0: # defender is training.
             self.defender.observation = [0]*self.G.number_of_nodes()
             inDefenseSet = [0]*self.G.number_of_nodes()
@@ -863,6 +900,7 @@ class Environment(object):
         self.attacker.reset_att()
         self.defender.reset_def()
         self.training_flag = -1
+        self.attact_ordered = []
 
 
     #other APIs similar to OpenAI gym

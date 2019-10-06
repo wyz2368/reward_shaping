@@ -933,6 +933,7 @@ class Learner(object):
                 retrain_episode_rewards = []
                 episode_rewards = [0.0]
                 temp_buffer = []
+                # act_set_len = [0.0]
                 saved_mean_reward = None
                 # obs = env.reset_everything_with_return()  # TODO: check type and shape of obs. should be [0.2, 0.4, 0.4] numpy
                 reset = True
@@ -1038,7 +1039,6 @@ class Learner(object):
 
                         pass_flag = False
                         if training_flag == 0:
-                            # print(env.G.nodes[19]['state'],env.G.nodes[24]['state'],env.G.nodes[26]['state'],env.G.nodes[28]['state'],env.G.nodes[29]['state'],env.G.nodes[30]['state'])
                             rewards_shaping = env.rewards()
                             if rewards_shaping['pass_flag']:
                                 for transition in temp_buffer:
@@ -1046,15 +1046,13 @@ class Learner(object):
                                     # print('transtion', rew0)
                                     rew_new = rewards_shaping[str(action0)].v
                                     episode_rewards[-1] += rew_new
-                                    replay_buffer.add(obs0, action0, rew_new, new_obs0, done0)
-                                    # print('changed:', rew_new, 'action:', action0)
+                                    replay_buffer.add(obs0, action0, rew_new/2, new_obs0, done0)
+                                    print('changed:', rew_new, 'action:', action0)
                                 temp_buffer = []
-                                # print('********')
+                                print('********')
                                 env.reset_reward_shaping()
                                 pass_flag = True
                         elif training_flag == 1:
-                            # print(env.G.nodes[19]['state'], env.G.nodes[24]['state'], env.G.nodes[26]['state'],
-                            #       env.G.nodes[28]['state'], env.G.nodes[29]['state'], env.G.nodes[30]['state'])
                             rewards_shaping = env.rewards()
                             if rewards_shaping['pass_flag']:
                                 for transition in temp_buffer:
@@ -1062,17 +1060,26 @@ class Learner(object):
                                     # print('transtion', rew1)
                                     rew_new = rewards_shaping[str(action1)].v
                                     episode_rewards[-1] += rew_new
+                                    print('act:', action1, 'rew_new:', rew_new, 'rew1:', rew1)
                                     replay_buffer.add(obs1, action1, rew_new, new_obs1, done1)
                                     # print('changed:', rew_new, 'action:', action1)
                                 temp_buffer = []
-                                # print('********')
+                                print('********')
                                 env.reset_reward_shaping()
                                 pass_flag = True
 
 
                         if pass_flag:
                             episode_rewards[-1] += rew
-                            replay_buffer.add(obs, action, rew, new_obs, float(done))
+                            # print("pass earns ", rew)
+                            if training_flag == 0:
+                                replay_buffer.add(obs, action, rew, new_obs, float(done))
+                            else:
+                                # print('*************************')
+                                # print('action pass:', action, env.actionspace_att[action], 'rew', rew)
+                                # print(episode_rewards[-1])
+                                # print('*************************')
+                                replay_buffer.add(obs, action, rew, new_obs, float(done))
                         else:
                             temp_buffer.append((obs, action, rew, new_obs, float(done)))
 

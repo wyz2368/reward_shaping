@@ -1,7 +1,7 @@
 # Packages import
 import numpy as np
 import sys
-# sys.path.append('/home/wangyzh/exp')
+sys.path.append('/home/wangyzh/exp')
 import warnings
 from attackgraph.deepgraph_runner import initialize
 
@@ -13,7 +13,7 @@ import os
 DIR_def = os.getcwd() + '/trained_str/'
 DIR_att = os.getcwd() + '/trained_str/'
 
-def training_att_single(game, str_def):
+def training_att_single(game, str_def, epoch):
     print('Begin attacker training against ' + str_def)
     env = game.env
     env.reset_everything()
@@ -28,7 +28,7 @@ def training_att_single(game, str_def):
     param = jp.load_json_data(param_path)
 
 
-    scope = 'att_str_epoch' + str(101) + '.pkl' + '/'
+    scope = 'att_str_epoch' + str(epoch) + '.pkl' + '/'
 
     learner = Learner()
     with learner.graph.as_default():
@@ -38,7 +38,7 @@ def training_att_single(game, str_def):
                 network = models.mlp(num_hidden=param['num_hidden'], num_layers=param['num_layers']),
                 lr =param['lr'],
                 total_timesteps=param['total_timesteps_att'],
-                exploration_fraction=param['exploration_fraction'],
+                exploration_fraction=param['exploration_fraction_att'],
                 exploration_final_eps=param['exploration_final_eps'],
                 print_freq=param['print_freq'],
                 param_noise=param['param_noise'],
@@ -46,16 +46,16 @@ def training_att_single(game, str_def):
                 prioritized_replay=param['prioritized_replay'],
                 checkpoint_freq=param['checkpoint_freq'],
                 scope = scope,
-                epoch=101
+                epoch=epoch
             )
             print("Saving attacker's model to pickle.")
-            act_att.save(DIR_att + "att_str_epoch" + str(101) + ".pkl", 'att_str_epoch' + str(101) + '.pkl' + '/')
+            act_att.save(DIR_att + "att_str_epoch" + str(epoch) + ".pkl", 'att_str_epoch' + str(epoch) + '.pkl' + '/')
     learner.sess.close()
     print('Done attacker training against ' + str_def)
     return a_BD
 
 
-def training_def_single(game, str_att):
+def training_def_single(game, str_att, epoch):
     print('Begin defender training against ' + str_att)
     env = game.env
     env.reset_everything()
@@ -69,7 +69,7 @@ def training_def_single(game, str_att):
     param_path = os.getcwd() + '/network_parameters/param.json'
     param = jp.load_json_data(param_path)
 
-    scope = 'def_str_epoch' + str(100) + '.pkl' + '/'
+    scope = 'def_str_epoch' + str(epoch) + '.pkl' + '/'
 
     learner = Learner()
     with learner.graph.as_default():
@@ -79,7 +79,7 @@ def training_def_single(game, str_att):
                 network=models.mlp(num_hidden=param['num_hidden'], num_layers=param['num_layers']),
                 lr=param['lr'],
                 total_timesteps=param['total_timesteps_def'],
-                exploration_fraction=param['exploration_fraction'],
+                exploration_fraction=param['exploration_fraction_def'],
                 exploration_final_eps=param['exploration_final_eps'],
                 print_freq=param['print_freq'],
                 param_noise=param['param_noise'],
@@ -87,10 +87,10 @@ def training_def_single(game, str_att):
                 prioritized_replay=param['prioritized_replay'],
                 checkpoint_freq=param['checkpoint_freq'],
                 scope=scope,
-                epoch=100
+                epoch=epoch
             )
             print("Saving defender's model to pickle.")
-            act_def.save(DIR_def + "def_str_epoch" + str(100) + ".pkl", 'def_str_epoch' + str(100) + '.pkl' + '/')
+            act_def.save(DIR_def + "def_str_epoch" + str(epoch) + ".pkl", 'def_str_epoch' + str(epoch) + '.pkl' + '/')
     learner.sess.close()
     print('Done defender training against ' + str_att)
     return d_BD
@@ -104,13 +104,19 @@ def do_training(str, training_id):
     print("=======================================================")
     print("=======Begin training against single strategy =========")
     print("=======================================================")
-    if training_id == 1:
-        a_BD = training_att_single(game, str)
-        print('a_BD:', a_BD)
-    else:
-        d_BD = training_def_single(game, str)
-        print('d_BD:', d_BD)
+    print("Training flag is :", training_id)
+    BD_list = []
+    epoch = 15
+    for i in np.arange(2, epoch):
+        if training_id == 1:
+            a_BD = training_att_single(game, str, i)
+            BD_list.append(a_BD)
+        else:
+            d_BD = training_def_single(game, str, i)
+            BD_list.append(d_BD)
+        print("BD_list:", BD_list)
+        sys.stdout.flush()
 
 if __name__ == '__main__':
-    # do_training('def_str_epoch2.pkl', 1)
-    do_training('att_str_epoch2.pkl', 0)
+    # do_training('def_str_epoch38.pkl', 1)
+    do_training('att_str_epoch29.pkl', 0)

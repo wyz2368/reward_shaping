@@ -27,7 +27,10 @@ class Game_data(object):
         self.num_episodes = num_episodes
         self.threshold = threshold
 
-        # parameters for neural network
+        # regret matching table
+        self.str_regret_att = np.array([1])
+        self.str_regret_def = np.array([1])
+
 
     def set_hado_param(self, param):
         self.param = param # k, gamma, alpha = param

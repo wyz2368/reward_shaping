@@ -16,15 +16,24 @@ import datetime
 # # import tensorflow as tf
 # import pickle as pk
 #
-class Value:
-    def __init__(self, v=None):
-        self.v = v
+# class Value:
+#     def __init__(self, v=None):
+#         self.v = v
+#
+# a = {}
+# a[1] = Value(0)
+# a[2] = a[1]
+# a['2'] = 3
+#
+# print(a)
 
-a = {}
-a[1] = Value(0)
-a[2] = a[1]
-a['2'] = 3
 
-print(a)
+# a = {}
+# a[1]=1
+# a[2]=2
+# a[3]=3
+# print(1 in a.keys())
 
 
+a = np.array([1,2,3,4,5])
+print(np.maximum(a, 4))
