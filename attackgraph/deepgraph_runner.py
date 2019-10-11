@@ -19,6 +19,9 @@ from attackgraph import gambit_analysis as ga
 from attackgraph.simulation import series_sim
 # from attackgraph.sim_MPI import do_MPI_sim
 from attackgraph.sim_retrain import sim_retrain
+from attackgraph.meta_solvers import mixed_ne, \
+    weighted_ne, mixed_ne_finite_mem, weight_ne_finite_mem, \
+    regret_matching_emax, regret_matching_vs_mean
 
 
 # load_env: the name of env to be loaded.
@@ -124,8 +127,8 @@ def EGTA(env, game, start_hado=2, retrain=False, epoch=1, game_path=os.getcwd() 
     # while True:
         mem0 = proc.memory_info().rss
         # fix opponent strategy
-        mix_str_def = game.nasheq[epoch][0]
-        mix_str_att = game.nasheq[epoch][1]
+        # mix_str_def = game.nasheq[epoch][0]
+        # mix_str_att = game.nasheq[epoch][1]
 
         #Test mixed strategy
         # rand = np.random.rand(len(game.nasheq[epoch][0]))
@@ -133,13 +136,18 @@ def EGTA(env, game, start_hado=2, retrain=False, epoch=1, game_path=os.getcwd() 
         # mix_str_att = rand/np.sum(rand)
 
         #against the first strategy
-        # mix_str_def = np.zeros(len(game.nasheq[epoch][0]))
-        # mix_str_def[0] = 1
-        # mix_str_att = np.zeros(len(game.nasheq[epoch][1]))
-        # mix_str_att[0] = 1
+        mix_str_def = np.zeros(len(game.nasheq[epoch][0]))
+        mix_str_def[0] = 1
+        mix_str_att = np.zeros(len(game.nasheq[epoch][1]))
+        mix_str_att[0] = 1
 
-        #TODO: meta-solvers
-
+        # meta-solvers
+        mixed_ne(game, epoch)
+        # weighted_ne(game, epoch, gamma=game.gamma)
+        # mixed_ne_finite_mem(game, epoch, mem_size=game.mem_size)
+        # weight_ne_finite_mem(game, epoch, gamma=game.gamma, mem_size=game.mem_size)
+        # regret_matching_vs_mean(game, epoch, eps=game.eps)
+        # regret_matching_emax(game, epoch, eps=game.eps)
 
         aPayoff, dPayoff = util.payoff_mixed_NE(game, epoch)
 
@@ -226,7 +234,7 @@ def EGTA(env, game, start_hado=2, retrain=False, epoch=1, game_path=os.getcwd() 
         payoffmatrix_def = game.payoffmatrix_def
         payoffmatrix_att = game.payoffmatrix_att
         print("Begin Gambit analysis.")
-        nash_att, nash_def = ga.do_gambit_analysis(payoffmatrix_def, payoffmatrix_att)
+        nash_att, nash_def = ga.do_gambit_analysis(payoffmatrix_def, payoffmatrix_att, maxent=False, minent=False, num_nash=5)
         ga.add_new_NE(game, nash_att, nash_def, epoch)
         game.env.attacker.nn_att = None
         game.env.defender.nn_def = None
@@ -377,10 +385,11 @@ def EGTA_restart(restart_epoch, start_hado = 2, retrain=False, game_path = os.ge
 
 if __name__ == '__main__':
     warnings.filterwarnings("ignore")
-    game = initialize(load_env='run_env_B', env_name=None)
+    # game = initialize(load_env='run_env_B', env_name=None)
     # game = initialize(load_env='run_env_Bhard', env_name=None)
     # game = initialize(load_env='run_env_sep_B', env_name=None)
     # game = initialize(load_env='run_env_sep_AND', env_name=None)
+    game = initialize(load_env='run_env_B_costly', env_name=None)
     # EGTA(env, game, retrain=True)
     EGTA(game.env, game, retrain=False)
     # EGTA_restart(restart_epoch=4)

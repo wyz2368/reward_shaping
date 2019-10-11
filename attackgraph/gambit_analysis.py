@@ -61,12 +61,17 @@ def decode_gambit_file():
 
     return nash_att, nash_def
 
-def do_gambit_analysis(poDef, poAtt):
+def do_gambit_analysis(poDef, poAtt, maxent=False, minent=False, num_nash=5):
     timeout = 600
     encode_gambit_file(poDef, poAtt) #TODO:change timeout adaptive
     while True:
         gambit_analysis(timeout)
-        nash_att, nash_def = decode_gambit_file()
+        if not maxent and not minent:
+            # pick random NE.
+            nash_att, nash_def = decode_gambit_file()
+        else:
+            # pick required NE.
+            nash_att, nash_def = decode_gambit_file_multiple_NEs(maxent, minent, num_nash)
         timeout += 120
         if timeout > 7200:
             print("Gambit has been running for more than 2 hour.!")
@@ -97,10 +102,88 @@ def add_new_NE(game, nash_att, nash_def, epoch):
     ne[1] = nash_att
     game.add_nasheq(epoch, ne)
 
-# nash_DIR = os.getcwd() + '/gambit_data/nash.txt'
-# with open(nash_DIR,'r') as f:
-#     nash = f.readline()
-#     if len(nash.strip()) == 0:
-#         print("no")
-#     else:
-#         print('yes')
+
+# Calculate the entropy of NE.
+def maxent_NE(nash_list):
+    H_list = np.array([])
+    if len(nash_list) == 0:
+        raise ValueError("The length of Nash list is zero.")
+    for nash in nash_list:
+        np.append(H_list, entropy_NE(nash))
+
+    nash_selected = nash_list[np.argmax(H_list)]
+    return nash_selected
+
+
+def minent_NE(nash_list):
+    H_list = np.array([])
+    if len(nash_list) == 0:
+        raise ValueError("The length of Nash list is zero.")
+    for nash in nash_list:
+        np.append(H_list, entropy_NE(nash))
+
+    nash_selected = nash_list[np.argmin(H_list)]
+    return nash_selected
+
+
+def entropy_NE(nash):
+    # This function calculates an approximated entropy since
+    # it sets a shreshold for probability.
+    H = 0
+    for p in nash:
+        if p <= 0.05:
+            continue
+        H -= p*np.log(p)
+    return H
+
+def decode_gambit_file_multiple_NEs(maxent, minent, num_nash):
+    nash_DIR = os.getcwd() + '/gambit_data/nash.txt'
+    if not fp.isExist(nash_DIR):
+        raise ValueError("nash.txt file does not exist!")
+    num_lines = file_len(nash_DIR)
+    print("Number of NE is ", num_lines)
+    if num_lines >= num_nash:
+        num_lines = num_nash
+        print("Number of NE is constrained by the num_nash.")
+    nash_att_list = []
+    nash_def_list = []
+    with open(nash_DIR,'r') as f:
+        for i in np.arange(num_lines):
+            nash = f.readline()
+            if len(nash.strip()) == 0:
+                continue
+            nash = nash[3:]
+            nash = nash.split(',')
+            new_nash = []
+            for j in range(len(nash)):
+                new_nash.append(convert(nash[j]))
+
+            new_nash = np.array(new_nash)
+            new_nash = np.round(new_nash, decimals=8)
+            nash_def = new_nash[:int(len(new_nash)/2)]
+            nash_att = new_nash[int(len(new_nash)/2):]
+            nash_att_list.append(nash_att)
+            nash_def_list.append(nash_def)
+
+    if maxent:
+        nash_att = maxent_NE(nash_att_list)
+        nash_def = maxent_NE(nash_def_list)
+    elif minent:
+        nash_att = minent_NE(nash_att_list)
+        nash_def = minent_NE(nash_def_list)
+    else:
+        raise ValueError("Falsely enter the multiple NE function.")
+
+    return nash_att, nash_def
+
+# Get number of lines in a text file.
+def file_len(fname):
+    num_lines = sum(1 for line in open(fname))
+    return num_lines
+
+path = os.getcwd() + '/gambit_data/nash.txt'
+with open(path,'r') as f:
+    for i in np.arange(5):
+        nash = f.readline()
+        print(nash)
+

@@ -4,22 +4,23 @@ def mixed_ne(game, epoch):
     mix_str_def = np.zeros(epoch)
     mix_str_att = np.zeros(epoch)
     for i in np.arange(1, epoch+1):
-        temp = game.nash[i][0].copy
+        temp = game.nash[i][0].copy()
         mix_str_def[:len(temp)] += temp
-        temp = game.nash[i][1].copy
+        temp = game.nash[i][1].copy()
         mix_str_att[:len(temp)] += temp
-    mix_str_def = mix_str_def / np.sum(mix_str_def)
+    mix_str_def = mix_str_def/np.sum(mix_str_def)
     mix_str_att = mix_str_att/np.sum(mix_str_att)
     return mix_str_def, mix_str_att
 
 def weighted_ne(game, epoch, gamma):
     # gamma is the discount factor for NEs.
+    #TODO: Be careful about the normalization and the value of gamma.
     mix_str_def = np.zeros(epoch)
     mix_str_att = np.zeros(epoch)
     for i in np.arange(1, epoch+1):
-        temp = game.nash[i][0].copy
+        temp = game.nash[i][0].copy()
         mix_str_def[:len(temp)] += temp * gamma**(epoch-i)
-        temp = game.nash[i][1].copy
+        temp = game.nash[i][1].copy()
         mix_str_att[:len(temp)] += temp * gamma**(epoch-i)
     mix_str_def = mix_str_def / np.sum(mix_str_def)
     mix_str_att = mix_str_att / np.sum(mix_str_att)
@@ -32,15 +33,15 @@ def mixed_ne_finite_mem(game, epoch, mem_size):
     mix_str_att = np.zeros(epoch)
     if mem_size >= epoch:
         for i in np.arange(1, epoch + 1):
-            temp = game.nash[i][0].copy
+            temp = game.nash[i][0].copy()
             mix_str_def[:len(temp)] += temp
-            temp = game.nash[i][1].copy
+            temp = game.nash[i][1].copy()
             mix_str_att[:len(temp)] += temp
     else:
         for i in np.arange(epoch-mem_size+1, epoch + 1):
-            temp = game.nash[i][0].copy
+            temp = game.nash[i][0].copy()
             mix_str_def[:len(temp)] += temp
-            temp = game.nash[i][1].copy
+            temp = game.nash[i][1].copy()
             mix_str_att[:len(temp)] += temp
     mix_str_def = mix_str_def / np.sum(mix_str_def)
     mix_str_att = mix_str_att / np.sum(mix_str_att)
@@ -52,15 +53,15 @@ def weight_ne_finite_mem(game, epoch, gamma, mem_size):
     mix_str_att = np.zeros(epoch)
     if mem_size >= epoch:
         for i in np.arange(1, epoch + 1):
-            temp = game.nash[i][0].copy
+            temp = game.nash[i][0].copy()
             mix_str_def[:len(temp)] += temp * gamma ** (epoch - i)
-            temp = game.nash[i][1].copy
+            temp = game.nash[i][1].copy()
             mix_str_att[:len(temp)] += temp * gamma ** (epoch - i)
     else:
         for i in np.arange(epoch-mem_size+1, epoch + 1):
-            temp = game.nash[i][0].copy
+            temp = game.nash[i][0].copy()
             mix_str_def[:len(temp)] += temp * gamma ** (epoch - i)
-            temp = game.nash[i][1].copy
+            temp = game.nash[i][1].copy()
             mix_str_att[:len(temp)] += temp * gamma ** (epoch - i)
     mix_str_def = mix_str_def / np.sum(mix_str_def)
     mix_str_att = mix_str_att / np.sum(mix_str_att)
@@ -75,9 +76,10 @@ def regret_matching_vs_mean(game, epoch, eps):
         return mix_str_def, mix_str_att
 
     num_str = len(game.att_str)
-    if len(game.str_regret_att) < num_str:
-        np.append(game.str_regret_att, 0)
-        np.append(game.str_regret_def, 0)
+    if num_str - len(game.str_regret_att) != 1:
+        raise ValueError("Length of str_regret_att does not match num_str")
+    np.append(game.str_regret_att, 0)
+    np.append(game.str_regret_def, 0)
 
     str_regret_att = game.str_regret_att.copy()
     str_regret_def = game.str_regret_def.copy()
@@ -97,6 +99,7 @@ def regret_matching_vs_mean(game, epoch, eps):
     game.str_regret_def = np.maximum(game.str_regret_def + regret_vec_def, eps)
 
     #TODO: Be careful about the normalization.
+    #Due to the existence of eps, np.sum(game.str_regret_att)!=0.
     game.str_regret_att = game.str_regret_att/np.sum(game.str_regret_att)
     game.str_regret_def = game.str_regret_def/np.sum(game.str_regret_def)
 
@@ -110,9 +113,10 @@ def regret_matching_emax(game, epoch, eps):
         return mix_str_def, mix_str_att
 
     num_str = len(game.att_str)
-    if len(game.str_regret_att) < num_str:
-        np.append(game.str_regret_att, 0)
-        np.append(game.str_regret_def, 0)
+    if len(game.str_regret_att) >= num_str:
+        raise ValueError("Length of str_regret_att does not match num_str")
+    np.append(game.str_regret_att, 0)
+    np.append(game.str_regret_def, 0)
 
     str_regret_att = game.str_regret_att.copy()
     str_regret_def = game.str_regret_def.copy()

@@ -31,6 +31,11 @@ class Game_data(object):
         self.str_regret_att = np.array([1])
         self.str_regret_def = np.array([1])
 
+        # meta-solver parameters
+        gamma = 0.8
+        mem_size = 6
+        eps = 1
+
 
     def set_hado_param(self, param):
         self.param = param # k, gamma, alpha = param

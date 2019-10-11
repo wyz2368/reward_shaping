@@ -36,4 +36,28 @@ import datetime
 
 
 a = np.array([1,2,3,4,5])
-print(np.maximum(a, 4))
+b = np.reshape(a,newshape=[5,1])
+a = np.array([])
+print(a)
+
+# epoch = 10
+# gamma = 0.7
+# mix_str_def = np.zeros(epoch)
+# mix_str_att = np.zeros(epoch)
+# for i in np.arange(1, epoch+1):
+#     temp = np.random.dirichlet(np.ones(i),size=1)[0]
+#     mix_str_def[:len(temp)] += temp * gamma**(epoch-i)
+#     print(i, gamma**(epoch-i))
+#     temp = np.random.dirichlet(np.ones(i),size=1)[0]
+#     mix_str_att[:len(temp)] += temp * gamma**(epoch-i)
+# mix_str_def = mix_str_def / np.sum(mix_str_def)
+# mix_str_att = mix_str_att / np.sum(mix_str_att)
+# print(mix_str_def)
+# print(mix_str_att)
+# print(np.sum(mix_str_def))
+# print(np.sum(mix_str_att))
+
+# epoch = 10
+# mem_size = 3
+# for i in np.arange(epoch-mem_size+1, epoch + 1):
+#     print(i)

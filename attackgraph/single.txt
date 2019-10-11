@@ -8,7 +8,7 @@
 #PBS -m abe
 
 # Change the number of cores (ppn=1), amount of memory, and walltime:
-#PBS -l nodes=1:ppn=10,pmem=4gb,walltime=60:00:00
+#PBS -l nodes=1:ppn=5,pmem=4gb,walltime=60:00:00
 #PBS -j oe
 #PBS -V
 
@@ -25,3 +25,6 @@ module load python-anaconda3/latest-3.6
 cd ${PBS_O_WORKDIR}
 
 python deepgraph_runner.py > out.txt
+
+
+

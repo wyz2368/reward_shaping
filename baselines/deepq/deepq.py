@@ -1047,26 +1047,26 @@ class Learner(object):
                                     rew_new = rewards_shaping[str(action0)].v
                                     episode_rewards[-1] += rew_new
                                     replay_buffer.add(obs0, action0, rew_new/2, new_obs0, done0)
-                                    print('changed:', rew_new, 'action:', action0)
+                                    # print('changed:', rew_new, 'action:', action0)
                                 temp_buffer = []
-                                print('********')
+                                # print('********')
                                 env.reset_reward_shaping()
                                 pass_flag = True
-                        elif training_flag == 1:
-                            rewards_shaping = env.rewards()
-                            if rewards_shaping['pass_flag']:
-                                for transition in temp_buffer:
-                                    obs1, action1, rew1, new_obs1, done1 = transition
-                                    # print('transtion', rew1)
-                                    rew_new = rewards_shaping[str(action1)].v
-                                    episode_rewards[-1] += rew_new
-                                    print('act:', action1, 'rew_new:', rew_new, 'rew1:', rew1)
-                                    replay_buffer.add(obs1, action1, rew_new, new_obs1, done1)
-                                    # print('changed:', rew_new, 'action:', action1)
-                                temp_buffer = []
-                                print('********')
-                                env.reset_reward_shaping()
-                                pass_flag = True
+                        # elif training_flag == 1:
+                        #     rewards_shaping = env.rewards()
+                        #     if rewards_shaping['pass_flag']:
+                        #         for transition in temp_buffer:
+                        #             obs1, action1, rew1, new_obs1, done1 = transition
+                        #             # print('transtion', rew1)
+                        #             rew_new = rewards_shaping[str(action1)].v
+                        #             episode_rewards[-1] += rew_new
+                        #             # print('act:', action1, 'rew_new:', rew_new, 'rew1:', rew1)
+                        #             replay_buffer.add(obs1, action1, rew_new, new_obs1, done1) # NRS
+                        #             # print('changed:', rew_new, 'action:', action1)
+                        #         temp_buffer = []
+                        #         # print('********')
+                        #         env.reset_reward_shaping()
+                        #         pass_flag = True
 
 
                         if pass_flag:
@@ -1081,11 +1081,13 @@ class Learner(object):
                                 # print('*************************')
                                 replay_buffer.add(obs, action, rew, new_obs, float(done))
                         else:
-                            temp_buffer.append((obs, action, rew, new_obs, float(done)))
+                            if training_flag == 1:
+                                episode_rewards[-1] += rew
+                                replay_buffer.add(obs, action, rew, new_obs, float(done))
+                            elif training_flag == 0:
+                                temp_buffer.append((obs, action, rew, new_obs, float(done)))
 
                         obs = new_obs
-
-
 
                         if done:
                             # # print('time',t)
@@ -1096,6 +1098,7 @@ class Learner(object):
                             # print("*******************")
                             episode_rewards.append(0.0)
                             reset = True
+                            # sample a new strategy from meta-stategy solver.
                             if not one_hot_att and not one_hot_def:
                                 if total_timesteps != 0:
                                     if training_flag == 0:  # defender is training
