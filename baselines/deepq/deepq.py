@@ -1046,46 +1046,34 @@ class Learner(object):
                                     # print('transtion', rew0)
                                     rew_new = rewards_shaping[str(action0)].v
                                     episode_rewards[-1] += rew_new
-                                    replay_buffer.add(obs0, action0, rew_new/2, new_obs0, done0)
+                                    replay_buffer.add(obs0, action0, rew_new, new_obs0, done0)
                                     # print('changed:', rew_new, 'action:', action0)
                                 temp_buffer = []
                                 # print('********')
                                 env.reset_reward_shaping()
                                 pass_flag = True
-                        # elif training_flag == 1:
-                        #     rewards_shaping = env.rewards()
-                        #     if rewards_shaping['pass_flag']:
-                        #         for transition in temp_buffer:
-                        #             obs1, action1, rew1, new_obs1, done1 = transition
-                        #             # print('transtion', rew1)
-                        #             rew_new = rewards_shaping[str(action1)].v
-                        #             episode_rewards[-1] += rew_new
-                        #             # print('act:', action1, 'rew_new:', rew_new, 'rew1:', rew1)
-                        #             replay_buffer.add(obs1, action1, rew_new, new_obs1, done1) # NRS
-                        #             # print('changed:', rew_new, 'action:', action1)
-                        #         temp_buffer = []
-                        #         # print('********')
-                        #         env.reset_reward_shaping()
-                        #         pass_flag = True
+                        elif training_flag == 1:
+                            rewards_shaping = env.rewards()
+                            if rewards_shaping['pass_flag']:
+                                for transition in temp_buffer:
+                                    obs1, action1, rew1, new_obs1, done1 = transition
+                                    # print('transtion', rew1)
+                                    rew_new = rewards_shaping[str(action1)].v
+                                    episode_rewards[-1] += rew_new
+                                    # print('act:', action1, 'rew_new:', rew_new, 'rew1:', rew1)
+                                    replay_buffer.add(obs1, action1, rew_new, new_obs1, done1)
+                                    # print('changed:', rew_new, 'action:', action1)
+                                temp_buffer = []
+                                # print('********')
+                                env.reset_reward_shaping()
+                                pass_flag = True
 
 
                         if pass_flag:
                             episode_rewards[-1] += rew
-                            # print("pass earns ", rew)
-                            if training_flag == 0:
-                                replay_buffer.add(obs, action, rew, new_obs, float(done))
-                            else:
-                                # print('*************************')
-                                # print('action pass:', action, env.actionspace_att[action], 'rew', rew)
-                                # print(episode_rewards[-1])
-                                # print('*************************')
-                                replay_buffer.add(obs, action, rew, new_obs, float(done))
+                            replay_buffer.add(obs, action, rew, new_obs, float(done))
                         else:
-                            if training_flag == 1:
-                                episode_rewards[-1] += rew
-                                replay_buffer.add(obs, action, rew, new_obs, float(done))
-                            elif training_flag == 0:
-                                temp_buffer.append((obs, action, rew, new_obs, float(done)))
+                            temp_buffer.append((obs, action, rew, new_obs, float(done)))
 
                         obs = new_obs
 

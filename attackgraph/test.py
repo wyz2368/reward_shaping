@@ -28,36 +28,31 @@ import datetime
 # print(a)
 
 
-# a = {}
-# a[1]=1
-# a[2]=2
-# a[3]=3
-# print(1 in a.keys())
+# b = np.zeros(6,)
+# a = []
+# a.append(np.array([0.3, 0.7, 0  , 0  , 0  , 0]))
+# a.append(np.array([0.1, 0.3, 0.6, 0  , 0  , 0]))
+# a.append(np.array([0  , 0.1, 0.5, 0.4, 0  , 0]))
+# a.append(np.array([0  , 0.1, 0.3, 0  , 0.6, 0]))
+# a.append(np.array([0  , 0.1, 0.1, 0.1, 0.4, 0.3]))
+#
+# gamma = 0.3
+# epoch = 5
+# den = 0
+# for i in a:
+#     b += i * gamma**epoch
+#     den += gamma**epoch
+#     epoch -=1
+#     print(epoch, ":", i * gamma**epoch, gamma**epoch)
+#
+# print(b/np.sum(b))
+# print(b/den)
 
 
-a = np.array([1,2,3,4,5])
-b = np.reshape(a,newshape=[5,1])
-a = np.array([])
+a=np.array([1,2,3,4,5])
+for i, item in enumerate(a):
+    if item < 3:
+        a[i] = 0
+
 print(a)
 
-# epoch = 10
-# gamma = 0.7
-# mix_str_def = np.zeros(epoch)
-# mix_str_att = np.zeros(epoch)
-# for i in np.arange(1, epoch+1):
-#     temp = np.random.dirichlet(np.ones(i),size=1)[0]
-#     mix_str_def[:len(temp)] += temp * gamma**(epoch-i)
-#     print(i, gamma**(epoch-i))
-#     temp = np.random.dirichlet(np.ones(i),size=1)[0]
-#     mix_str_att[:len(temp)] += temp * gamma**(epoch-i)
-# mix_str_def = mix_str_def / np.sum(mix_str_def)
-# mix_str_att = mix_str_att / np.sum(mix_str_att)
-# print(mix_str_def)
-# print(mix_str_att)
-# print(np.sum(mix_str_def))
-# print(np.sum(mix_str_att))
-
-# epoch = 10
-# mem_size = 3
-# for i in np.arange(epoch-mem_size+1, epoch + 1):
-#     print(i)

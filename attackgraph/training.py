@@ -2,6 +2,7 @@ from attackgraph import json_op as jp
 from baselines.common import models
 from baselines.deepq.deepq import learn_multi_nets, Learner
 import os
+import numpy as np
 # import copy
 
 DIR_def = os.getcwd() + '/defender_strategies/'
@@ -13,6 +14,17 @@ def training_att(game, mix_str_def, epoch, retrain = False):
 
     # env = copy.deepcopy(game.env)
     print("training_att mix_str_def is ", mix_str_def)
+
+    if not np.all(mix_str_def >= 0):
+        print('---------------------------------------------------------------------------')
+        print("WARNING: Gambit returns negative mixed strategy! DO-EGTA may have finished.")
+        print('---------------------------------------------------------------------------')
+
+        mix_str_def[mix_str_def < 0]=0
+
+    if np.sum(mix_str_def) != 1:
+        print("Sum is corrected to 1.")
+        mix_str_def = mix_str_def/np.sum(mix_str_def)
 
     env = game.env
     env.reset_everything()
@@ -64,6 +76,16 @@ def training_def(game, mix_str_att, epoch, retrain = False):
         raise ValueError("The length of mix_str_att and att_str does not match while retraining")
 
     print("training_def mix_str_att is ", mix_str_att)
+
+    if not np.all(mix_str_att >= 0):
+        print('---------------------------------------------------------------------------')
+        print("WARNING: Gambit returns negative mixed strategy! DO-EGTA may have finished.")
+        print('---------------------------------------------------------------------------')
+        mix_str_att[mix_str_att < 0] = 0
+
+    if np.sum(mix_str_att) != 1:
+        print("Sum is corrected to 1.")
+        mix_str_att = mix_str_att/np.sum(mix_str_att)
 
     # env = copy.deepcopy(game.env)
     env = game.env
@@ -117,6 +139,10 @@ def training_hado_att(game):
 
     if len(mix_str_def) != len(game.def_str):
         raise ValueError("The length of mix_str_def and def_str does not match while retraining")
+
+    if np.sum(mix_str_def) != 1:
+        print("Sum is corrected to 1.")
+        mix_str_def = mix_str_def/np.sum(mix_str_def)
 
     # env = copy.deepcopy(game.env)
     env = game.env

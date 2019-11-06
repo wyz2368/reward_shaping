@@ -644,14 +644,8 @@ class Environment(object):
         dReward = 0
         if self.training_flag == 0: # If the defender is training, attacker builds greedy set. Vice Versa.
             self.attacker.att_greedy_action_builder(self.G, self.T - self.current_time + 1)
-            # self.act_len_def.append(len(self.defender.defact))
-            # if len(self.act_len_def) == 10000:
-            #     print("Defender's action set length:", sum(self.act_len_def)/10000)
         elif self.training_flag == 1:
             self.defender.def_greedy_action_builder(self.G, self.T - self.current_time + 1)
-            # self.act_len_att.append(len(self.attacker.attact))
-            # if len(self.act_len_att) == 10000:
-            #     print("Attacker's action set length:", sum(self.act_len_att)/10000)
         else:
             raise ValueError("training flag error.")
 
@@ -664,31 +658,29 @@ class Environment(object):
         def_succ_tuple = set() # actions on compromised nodes, may not be goal.
         # attacker's action
 
-        # if self.training_flag == 1:
-        #     loop = self.attact_ordered
-        # else:
-        #     loop = attact
+        if self.training_flag == 1:
+            loop = self.attact_ordered
+        else:
+            loop = attact
 
-        for attack in attact: # NRS
-        # for attack in self.attact_ordered:
+        # for attack in attact:
+        for attack in loop:
             if isinstance(attack, tuple):
                 # check OR node
                 if self.training_flag == 1:
                     self.att_reward_shaping[attack].v += self.G.edges[attack]['cost']
-                    aReward += self.G.edges[attack]['cost'] #NO reward shaping for attacker. aReward is the reward of an action set. (NRS)
                 if random.uniform(0, 1) <= self.G.edges[attack]['actProb']:
-                    # if self.G.nodes[attack[-1]]['state'] == 1:
-                    #     continue
+                    if self.G.nodes[attack[-1]]['state'] == 1:
+                        continue
                     self.G.nodes[attack[-1]]['state'] = 1
                     att_succ_tuple[attack[-1]] = attack
             else:
                 # check AND node
                 if self.training_flag == 1:
                     self.att_reward_shaping[attack].v += self.G.nodes[attack]['aCost']
-                    aReward += self.G.nodes[attack]['aCost'] # (NRS)
                 if random.uniform(0, 1) <= self.G.nodes[attack]['actProb']:
-                    # if self.G.nodes[attack]['state'] == 1:
-                    #     continue
+                    if self.G.nodes[attack]['state'] == 1:
+                        continue
                     self.G.nodes[attack]['state'] = 1
                     att_succ_tuple[attack] = attack
 
@@ -702,35 +694,19 @@ class Environment(object):
         _, targetset = self.get_Targets()
         for node in targetset:
             if self.training_flag == 1:
-                if self.G.nodes[node]['state'] == 1:
-                    aReward += self.G.nodes[node]['aReward']  # (NRS)
-
-                # if self.G.nodes[node]['state'] == 1 and node in att_succ_tuple.keys():
-                #     aReward += self.G.nodes[node]['aReward'] # (NRS)
-                #     if node in self.attacker.ANDnodes:
-                #         self.att_reward_shaping[node].v += self.G.nodes[node]['aReward']
-                #     else:
-                #         self.att_reward_shaping[att_succ_tuple[node]].v += self.G.nodes[node]['aReward']
-                # elif self.G.nodes[node]['state'] == 1 and node not in att_succ_tuple.keys():
-                #     aReward += self.G.nodes[node]['aReward']
+                if self.G.nodes[node]['state'] == 1 and node in att_succ_tuple.keys():
+                    if node in self.attacker.ANDnodes:
+                        self.att_reward_shaping[node].v += self.G.nodes[node]['aReward']
+                    else:
+                        self.att_reward_shaping[att_succ_tuple[node]].v += self.G.nodes[node]['aReward']
+                elif self.G.nodes[node]['state'] == 1 and node not in att_succ_tuple.keys():
+                    aReward += self.G.nodes[node]['aReward']
 
             if self.training_flag == 0:
                 if self.G.nodes[node]['state'] == 1:
                     dReward += self.G.nodes[node]['dPenalty']
 
-        # equally distribute extra reward to each action.
-        # if self.training_flag == 1:
-        #     num_act = len(attact)
-        #     if num_act == 0:
-        #         pass_att = aReward
-        #     else:
-        #         for i in attact:
-        #             self.att_reward_shaping[i].v += aReward/(num_act+1)
-        #         pass_att = aReward/(num_act+1)
-
-
         if self.training_flag == 0:
-            # print('def_succ_tuple:',def_succ_tuple)
             if len(self.defender.defact) == 0:
                 pass_reward = dReward
             else:
@@ -744,15 +720,15 @@ class Environment(object):
                     pass_reward = dReward
 
         ###### TEST ###################
-        # if self.training_flag == 1:
+        # if self.training_flag == 0:
         #     print('##########################')
         #     print('defact:', defact)
         #     print('attact:', attact)
-        #     for i in attact:
-        #         print(i, ':', self.att_reward_shaping[i].v)
-        #     print('att_succ_tuple:', att_succ_tuple)
-        #     print('rs:', self.att_reward_shaping)
-        #     print('aRew:', aReward)
+        #     for i in defact:
+        #         print(i, ':', self.def_reward_shaping[i].v)
+        #     # print('att_succ_tuple:', att_succ_tuple)
+        #     # print('rs:', self.def_reward_shaping)
+        #     print('dRew:', dReward)
         #     current_state = []
         #     for node in self.G.nodes:
         #         current_state.append(self.G.nodes[node]['state'])
