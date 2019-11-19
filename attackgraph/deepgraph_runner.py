@@ -18,7 +18,6 @@ from attackgraph import game_data
 from attackgraph import gambit_analysis as ga
 from attackgraph.simulation import series_sim
 # from attackgraph.sim_MPI import do_MPI_sim
-from attackgraph.sim_retrain import sim_retrain
 from attackgraph.meta_solvers import mixed_ne, \
     weighted_ne, mixed_ne_finite_mem, weight_ne_finite_mem, \
     regret_matching_emax, regret_matching_vs_mean
@@ -138,10 +137,28 @@ def EGTA(env, game, start_hado=2, retrain=False, epoch=1, game_path=os.getcwd() 
         # mix_str_att = rand/np.sum(rand)
 
         #against the first strategy
-        mix_str_def = np.zeros(len(game.nasheq[epoch][0]))
-        mix_str_def[0] = 1
-        mix_str_att = np.zeros(len(game.nasheq[epoch][1]))
-        mix_str_att[0] = 1
+        # mix_str_def = np.zeros(len(game.nasheq[epoch][0]))
+        # mix_str_def[0] = 1
+        # mix_str_att = np.zeros(len(game.nasheq[epoch][1]))
+        # mix_str_att[0] = 1
+
+        #against a mixed latest opponents
+        # l = len(game.nasheq[epoch][0])
+        # if l <= 8:
+        #     mix_str_def = game.nasheq[epoch][0]
+        #     mix_str_att = game.nasheq[epoch][1]
+        # else:
+        #     mix_str_def = np.zeros(l)
+        #     mix_str_att = np.zeros(l)
+        #     mix_str_def[-4:] = np.array([0.1, 0.1, 0.3, 0.5])
+        #     mix_str_att[-4:] = np.array([0.1, 0.1, 0.3, 0.5])
+
+        #against the newest opponent
+        # mix_str_def = np.zeros(len(game.nasheq[epoch][0]))
+        # mix_str_def[-1] = 1
+        # mix_str_att = np.zeros(len(game.nasheq[epoch][1]))
+        # mix_str_att[-1] = 1
+
 
         # meta-solvers
         # mix_str_def, mix_str_att = mixed_ne(game, epoch)
@@ -150,6 +167,13 @@ def EGTA(env, game, start_hado=2, retrain=False, epoch=1, game_path=os.getcwd() 
         # mix_str_def, mix_str_att = weight_ne_finite_mem(game, epoch, gamma=game.gamma, mem_size=game.mem_size)
         # mix_str_def, mix_str_att = regret_matching_vs_mean(game, epoch, eps=1, gamma=game.gamma)
         # mix_str_def, mix_str_att = regret_matching_emax(game, epoch, eps=0)
+
+        # First meta-solvers and then DO
+        if epoch <= 10:
+            mix_str_def, mix_str_att = weight_ne_finite_mem(game, epoch, gamma=game.gamma, mem_size=game.mem_size)
+        else:
+            mix_str_def = game.nasheq[epoch][0]
+            mix_str_att = game.nasheq[epoch][1]
 
         aPayoff, dPayoff = util.payoff_mixed_NE(game, epoch)
 
@@ -407,7 +431,7 @@ def EGTA_restart(restart_epoch, start_hado = 2, retrain=False, game_path = os.ge
 
 if __name__ == '__main__':
     warnings.filterwarnings("ignore")
-    game = initialize(load_env='run_env_Bhard', env_name=None)
+    game = initialize(load_env='run_env_B', env_name=None)
     # game = initialize(load_env='run_env_Bhard', env_name=None)
     # game = initialize(load_env='run_env_sep_B', env_name=None)
     # game = initialize(load_env='run_env_sep_AND', env_name=None)

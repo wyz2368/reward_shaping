@@ -171,7 +171,8 @@ def mean_payoff(game, nash_att, nash_def):
     return dPayoff, aPayoff
 
 
-# Baseline Projected Replicator Dynamics:
+def adaptive():
+    pass
 
 
 

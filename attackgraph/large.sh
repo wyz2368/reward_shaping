@@ -18,3 +18,4 @@
 module load python3.6-anaconda/5.2.0
 cd ${SLURM_SUBMIT_DIR}
 python deepgraph_runner.py > out.txt
+

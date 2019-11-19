@@ -32,7 +32,7 @@ class Game_data(object):
         self.str_regret_def = np.array([1])
 
         # meta-solver parameters
-        self.gamma = 0.3
+        self.gamma = 0.4
         self.mem_size = 5
         self.eps = 1
 

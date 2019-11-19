@@ -4,8 +4,9 @@ from attackgraph import file_op as fp
 # import math
 import os
 import copy
+import glob
 from psutil import virtual_memory
-
+from queue import PriorityQueue as pq
 
 # # import networkx as nx
 # # import random
@@ -48,11 +49,25 @@ import datetime
 # print(b/np.sum(b))
 # print(b/den)
 
+# a = pq()
+# a.put((0,"a"))
+# a.put((1,"b"))
+# def ji(a):
+#     a.put((2, "c"))
+# ji(a)
+# print(a.get())
+# print(a.get())
+# print(a.get())
 
-a=np.array([1,2,3,4,5])
-for i, item in enumerate(a):
-    if item < 3:
-        a[i] = 0
+# a = np.array([[1,2,3],[4,5,6],[7,8,9]])
+# print(a[0:2,0:2])
 
+# a = glob.glob1(os.getcwd()+'/gambit_data/',"*")
+# print(type(a))
+
+a = np.array([1,2,3,4,5,6,7,8])
+a[-3:] = np.array([9,9,9])
 print(a)
 
+b = np.zeros(5)
+print(b)

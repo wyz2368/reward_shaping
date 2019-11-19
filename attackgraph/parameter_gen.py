@@ -7,8 +7,8 @@ def nn_param():
     param['num_layers'] = 1
     param['lr'] = 5e-5
     param['total_timesteps_att'] = 700000
-    param['total_timesteps_def'] = 100000
-    param['exploration_fraction_att'] = 0.4
+    param['total_timesteps_def'] = 1000000
+    param['exploration_fraction_att'] = 0.2
     param['exploration_fraction_def'] = 0.5
     param['exploration_final_eps'] = 0.03
     param['print_freq'] = 250
@@ -60,4 +60,4 @@ def nn_param1():
     print("Network parameters have been saved in a json file successfully.")
 
 
-nn_param1()
+nn_param()
