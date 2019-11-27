@@ -124,12 +124,14 @@ def EGTA(env, game, start_hado=2, retrain=False, epoch=1, game_path=os.getcwd() 
     proc = psutil.Process(os.getpid())
 
     count = 100
+    epoch_cnt = 5
+    rand_cnt = 2
     while count != 0:
     # while True:
         mem0 = proc.memory_info().rss
         # fix opponent strategy
-        # mix_str_def = game.nasheq[epoch][0]
-        # mix_str_att = game.nasheq[epoch][1]
+        mix_str_def = game.nasheq[epoch][0]
+        mix_str_att = game.nasheq[epoch][1]
 
         #Test mixed strategy
         # rand = np.random.rand(len(game.nasheq[epoch][0]))
@@ -169,11 +171,43 @@ def EGTA(env, game, start_hado=2, retrain=False, epoch=1, game_path=os.getcwd() 
         # mix_str_def, mix_str_att = regret_matching_emax(game, epoch, eps=0)
 
         # First meta-solvers and then DO
-        if epoch <= 10:
-            mix_str_def, mix_str_att = weight_ne_finite_mem(game, epoch, gamma=game.gamma, mem_size=game.mem_size)
-        else:
-            mix_str_def = game.nasheq[epoch][0]
-            mix_str_att = game.nasheq[epoch][1]
+        # if epoch <= 10:
+        #     mix_str_def, mix_str_att = weight_ne_finite_mem(game, epoch, gamma=game.gamma, mem_size=game.mem_size)
+        # else:
+        #     mix_str_def = game.nasheq[epoch][0]
+        #     mix_str_att = game.nasheq[epoch][1]
+
+        # Alternating meta-strategy solvers.
+        # (1) Alternating with different period.
+        # if epoch <= 10:
+        #     mix_str_def, mix_str_att = weight_ne_finite_mem(game, epoch, gamma=game.gamma, mem_size=game.mem_size)
+        # elif epoch_cnt != 0:
+        #     mix_str_def = game.nasheq[epoch][0]
+        #     mix_str_att = game.nasheq[epoch][1]
+        #     epoch_cnt -= 1
+        # elif rand_cnt != 0:
+        #     mix_str_def, mix_str_att = weight_ne_finite_mem(game, epoch, gamma=game.gamma, mem_size=game.mem_size)
+        #     rand_cnt -= 1
+        #     if rand_cnt == 0:
+        #         rand_cnt = 2
+        #         epoch_cnt = 5
+
+        # (2) alternating between BR and ficticious play
+        # if epoch % 2 == 0:
+        #     mix_str_def = game.nasheq[epoch][0]
+        #     mix_str_att = game.nasheq[epoch][1]
+        # else:
+        #     l = len(game.nasheq[epoch][0])
+        #     mix_str_def = np.ones(l) / l
+        #     mix_str_att = np.ones(l) / l
+
+        # (3) alternating between BR and weighted NE
+        # if epoch % 2 == 0:
+        #     mix_str_def = game.nasheq[epoch][0]
+        #     mix_str_att = game.nasheq[epoch][1]
+        # else:
+        #     mix_str_def, mix_str_att = weight_ne_finite_mem(game, epoch, gamma=game.gamma, mem_size=game.mem_size)
+
 
         aPayoff, dPayoff = util.payoff_mixed_NE(game, epoch)
 

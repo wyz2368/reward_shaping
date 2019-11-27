@@ -30,7 +30,61 @@ The rule of creating subgames of the combined game:
    frequency in each of the child game.
 """
 
-def subgame_ne_search(num_player=2):
+def subgame_ne_search(num_str, main_method, nash_eq, payoff_matrice, child_partition):
+    # initialize the game.
+    game = fp.load_pkl(os.getcwd() + '/game_data/game.pkl')
+
+    co_payoff_matrix_def, co_payoff_matrix_att, deviations_def, deviations_att = init_simulation(num_str,
+                                                                                                 main_method,
+                                                                                                 nash_eq,
+                                                                                                 payoff_matrice)
+
+    # NE in the main_method.
+    # Assumption: both players have same number of strategies.
+    nasheq = nash_eq[main_method]
+    mixed_str_def = np.zeros(num_str)
+    mixed_str_att = np.zeros(num_str)
+    mixed_str_def[:len(nasheq[0])] = nasheq[0]
+    mixed_str_att[:len(nasheq[1])]=  nasheq[1]
+
+    # Construct defender's/attacker's strategy lists.
+    str_list_def = []
+    str_list_att = []
+
+    for method in child_partition:
+        for i in np.arange(2,2+child_partition[method]):
+            str_list_def.append(method + "_def_str_epoch" + str(i) + '.pkl')
+            str_list_att.append(method + "_att_str_epoch" + str(i) + '.pkl')
+
+    # Set flags.
+    confirmed = False
+    def_dev_flag = False
+    att_dev_flag = False
+
+    # initialize strategy library.
+    str_dict_def = load_policies(game, child_partition, identity=0)
+    str_dict_att = load_policies(game, child_partition, identity=1)
+
+    # NE Payoff for both players.
+    _mixed_str_def = np.reshape(mixed_str_def,newshape=(num_str,1))
+    ne_util_def = np.sum(_mixed_str_def * co_payoff_matrix_def * mixed_str_def)
+    ne_util_att = np.sum(_mixed_str_def * co_payoff_matrix_att * mixed_str_att)
+
+    # Search for defender's deviation.
+    ne_pos_def = np.where(mixed_str_def>0)[0]
+    ne_pos_att = np.where(mixed_str_att>0)[0]
+
+    cur_dev_def = deviations_def.pop()
+    idx_def = np.where(str_list_def == cur_dev_def)[0]
+    if len(idx_def) == 0:
+        raise ValueError("Current deviation strategy does not exist.")
+    for att in ne_pos_att:
+        aReward, dReward = series_sim_combined(env, game, str_dict_att[str_list_att[att]], str_dict_def[cur_dev_def],game.num_episodes)
+        co_payoff_matrix_att[idx_def[0], att] = aReward
+        co_payoff_matrix_def[idx_def[0], att] = dReward
+
+
+    # Search for attacker's deviation.
 
 
 
@@ -50,7 +104,7 @@ def init_simulation(num_str,
     :param child_partition: a dict recording number of strategies for each child game. {"baseline": 40, "RS":40}
     :param nash_eq: a dict recording the NE of each method {"baseline": nasheq, "RS": nasheq, ...}
     :param payoff_matrice: a dict recording the payoff matrix of each method {"baseline": payoff, "RS": payoff, ...}
-                           uniform strategy removed.
+                           payoff[0]/[1] def/att payoff matrix. Uniform strategy removed.
     :return:
     """
 
@@ -142,17 +196,6 @@ def ranking_ne(method, nasheq, deviation_att, deviation_def, ne_memory):
     frequency_idx_def = np.flip(np.argsort(frequency_def))
     frequency_idx_att = np.flip(np.argsort(frequency_att))
 
-    # for i in np.arange(len(frequency_idx_def)):
-    #     if i not in ne_att_copy:
-    #         deviation_att.put((i+1, method + '_att_str_epoch' + str(i + 1) + '.pkl'))
-    #     else:
-    #         continue
-    #
-    #     if i not in ne_def_copy:
-    #         deviation_def.put((i + 1, method + '_def_str_epoch' + str(i + 1) + '.pkl'))
-    #     else:
-    #         continue
-
     #TODO: make sure this is correct.
     for i in frequency_idx_att:
         if i not in ne_att_copy:
@@ -188,35 +231,43 @@ def whole_payoff_matrix(num_str, child_partition, env_name='run_env_B'):
 
     env = game.env
     num_episodes = game.num_episodes
+
+    # Assume two players have the same number of strategies.
     payoff_matrix_att = np.zeros((num_str, num_str))
     payoff_matrix_def = np.zeros((num_str, num_str))
 
+    #TODO: check the load path.
     att_str_dict = load_policies(game, child_partition, identity=0)
     def_str_dict = load_policies(game, child_partition, identity=1)
 
-
+    # method_pos_def records the starting idx of each method when combined.
     method_pos_def = 0
     for key_def in child_partition:
         for i in np.arange(1, child_partition[key_def]+1):
-            def_str = key_def + '_def_str_epoch' + str(i) + '.pkl'
-            pos_def = method_pos_def + i
+            def_str = key_def + '_def_str_epoch' + str(i+1) + '.pkl'
+            entry_pos_def = method_pos_def + i
             method_pos_att = 0
             for key_att in child_partition:
                 for j in np.arange(1,child_partition[key_att]+1):
-                    att_str = key_att + '_att_str_epoch' + str(j) + '.pkl'
-                    pos_att = method_pos_att + j
-                    print('Current Method is ', key_def, key_att, 'Current position:', i,j)
-                    sys.stdout.flush()
+                    att_str = key_att + '_att_str_epoch' + str(j+1) + '.pkl'
+                    entry_pos_att = method_pos_att + j
+                    # print current simulation info.
+                    if j % 10 == 0:
+                        print('Current Method is ', key_def, key_att, 'Current position:', i,j)
+                        sys.stdout.flush()
 
                     att_nn = att_str_dict[att_str]
                     def_nn = def_str_dict[def_str]
 
-                    aReward, dReward = series_sim_combined(env, game, att_nn, def_nn, num_episodes)
+                    aReward, dReward = series_sim_combined(env, att_nn, def_nn, num_episodes)
 
-                    payoff_matrix_att[pos_def-1,pos_att-1] = aReward
-                    payoff_matrix_def[pos_def-1,pos_att-1] = dReward
+                    payoff_matrix_att[entry_pos_def-1, entry_pos_att-1] = aReward
+                    payoff_matrix_def[entry_pos_def-1, entry_pos_att-1] = dReward
+
+                # update the starting position.
                 method_pos_att += child_partition[key_att]
 
+        # Periodically saving the payoff matrix.
         save_path = os.getcwd() + '/combined_game/'
         fp.save_pkl(payoff_matrix_att, save_path + 'payoff_matrix_att.pkl')
         fp.save_pkl(payoff_matrix_def, save_path + 'payoff_matrix_def.pkl')
@@ -251,8 +302,8 @@ def regret(nash_att, nash_def, payoffmatrix_att, payoffmatrix_def):
 
     return regret_att, regret_def
 
+#TODO: change the split point according to child_partition.
 def mean_regret(regret_att, regret_def, child_partition):
-
 
     mean_reg_att = []
     mean_reg_def = []
@@ -264,9 +315,13 @@ def mean_regret(regret_att, regret_def, child_partition):
     mean_reg_def.append(np.round(np.mean(regret_def[84:124]), decimals=2))
     return mean_reg_att, mean_reg_def
 
+# Measure the regret of subgames during strategy exploration.
+def regret_curve():
+    pass
 
 
-def series_sim_combined(env, game, nn_att, nn_def, num_episodes):
+
+def series_sim_combined(env, nn_att, nn_def, num_episodes):
     aReward_list = np.array([])
     dReward_list = np.array([])
 
@@ -357,6 +412,7 @@ def scope_finder(policy_path):
     scope = iter(loaded_params).__next__().split('/')[0]
     return scope
 
+# Load all policies into a dictionary.
 def load_policies(game, child_partition, identity):
     if identity == 0: # load defender's policies.
         mid_name = '_def_str_epoch'
@@ -370,14 +426,16 @@ def load_policies(game, child_partition, identity):
     str_dict = {}
     for key in child_partition:
         for i in np.arange(1, child_partition[key]+1):
-            nn = key + mid_name + str(i) + '.pkl'
+            nn = key + mid_name + str(i+1) + '.pkl'
 
-            def_uniform_flag = False
+            uniform_flag = False
             if "epoch1.pkl" in nn:
-                def_uniform_flag = True
+                uniform_flag = True
 
             load_path = path + nn
-            if def_uniform_flag:
+
+            # Strategies are kept as a tuple with parameters, session, graph.
+            if uniform_flag:
                 nn_act = fp.load_pkl(load_path)
                 str_dict[nn] = (nn_act, None, None)
             else:

@@ -9,7 +9,7 @@ from psutil import virtual_memory
 from queue import PriorityQueue as pq
 
 # # import networkx as nx
-# # import random
+import random
 # # import itertools
 import time
 import datetime
@@ -65,9 +65,8 @@ import datetime
 # a = glob.glob1(os.getcwd()+'/gambit_data/',"*")
 # print(type(a))
 
-a = np.array([1,2,3,4,5,6,7,8])
-a[-3:] = np.array([9,9,9])
-print(a)
+# a = np.array([1,2,3,4,5,6,7,8])
+# a[-3:] = np.array([9,9,9])
+# print(a)
 
-b = np.zeros(5)
-print(b)
+print(10 % 2)
