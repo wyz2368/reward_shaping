@@ -1,6 +1,6 @@
 from glob import glob1
 import numpy as np
-from attackgraph.simulation import series_sim
+# from attackgraph.simulation import series_sim
 from attackgraph import file_op as fp
 import os
 import re
@@ -12,7 +12,6 @@ from baselines.deepq.load_action import load_action_class
 # (1) Paths to the strategies of different heuristics.
 def_str_abs_path = '/defender_strategies/'
 att_str_abs_path = '/attacker_strategies/'
-
 
 
 def preprocess_file(file):
@@ -66,10 +65,11 @@ def load_policies(game, child_partition, identity):
 
     str_dict = {}
 
+    path = os.getcwd() + '/combined_game/'
     for key in child_partition:
-        path = os.getcwd() + '/' + key + name
         for i in np.arange(1, child_partition[key]+1):
-            nn = path + str(i+1) + '.pkl'
+            # nn = "RS/attacker_strategies/def_str_epoch2.pkl"
+            nn = key + name + str(i+1) + '.pkl'
 
             uniform_flag = False
             if "epoch1.pkl" in nn:
@@ -82,7 +82,7 @@ def load_policies(game, child_partition, identity):
                 nn_act = fp.load_pkl(load_path)
                 str_dict[nn] = (nn_act, None, None)
             else:
-                scope = scope_finder(path)
+                scope = scope_finder(load_path)
                 nn_act, sess, graph = load_action_class(load_path, scope, game, training_flag=identity)
                 str_dict[nn] = (nn_act, sess, graph)
 
@@ -110,5 +110,5 @@ def create_paths(methods_list):
     """
     paths = {}
     for method in methods_list:
-        paths[method] = os.getcwd() + '/' + method
+        paths[method] = os.getcwd() + '/combined_game/' + method
     return paths

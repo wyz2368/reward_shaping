@@ -65,6 +65,5 @@ import datetime
 # a = glob.glob1(os.getcwd()+'/gambit_data/',"*")
 # print(type(a))
 
-a = {0:np.array([0.3,0.2,0]),1:np.array([0.3,0.2,0.5])}
-a[0][a[0]>0] = 1
-print(a)
+a = os.getcwd()
+print(fp.isExist(a))

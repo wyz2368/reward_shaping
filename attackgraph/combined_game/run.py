@@ -1,4 +1,4 @@
-from .simulator import scan_and_sim
+from simulator import scan_and_sim
 import datetime
 
 def run(method_list):

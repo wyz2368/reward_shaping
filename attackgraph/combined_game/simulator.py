@@ -3,7 +3,7 @@ from attackgraph import file_op as fp
 import os
 from attackgraph.deepgraph_runner import initialize
 from attackgraph.simulation import get_Targets
-from .utils import load_policies, screen, create_paths
+from utils import load_policies, screen, create_paths
 # from baselines.deepq.load_action import load_action_class
 import random
 import sys
@@ -29,29 +29,34 @@ def whole_payoff_matrix(num_str, child_partition, env_name='run_env_B', save_pat
     payoff_matrix_att = np.zeros((num_str, num_str))
     payoff_matrix_def = np.zeros((num_str, num_str))
 
-    att_str_dict = load_policies(game, child_partition, identity=0)
-    def_str_dict = load_policies(game, child_partition, identity=1)
+    att_str_dict = load_policies(game, child_partition, identity=1)
+    def_str_dict = load_policies(game, child_partition, identity=0)
 
-    # method_pos_def records the starting idx of each method when combined.
+    ## method_pos_def records the starting idx of each method when combined.
     method_pos_def = 0
     for key_def in child_partition:
         for i in np.arange(1, child_partition[key_def]+1):
-            def_str = key_def + '_def_str_epoch' + str(i+1) + '.pkl'
+            def_str = key_def + '/defender_strategies/def_str_epoch' + str(i+1) + '.pkl'
             entry_pos_def = method_pos_def + i
             method_pos_att = 0
             for key_att in child_partition:
                 for j in np.arange(1,child_partition[key_att]+1):
-                    att_str = key_att + '_att_str_epoch' + str(j+1) + '.pkl'
+                    att_str = key_att + '/attacker_strategies/att_str_epoch' + str(j+1) + '.pkl'
                     entry_pos_att = method_pos_att + j
                     # print current simulation info.
-                    if j % 10 == 0:
-                        print('Current Method is ', key_def, key_att, 'Current position:', i,j)
+                    if 1:#j % 10 == 0:
+                        print("----------------------------------------------------")
+                        print('Current Method is ', (key_def, key_att), 'Current position:', (i+1,j+1), 'Pos:', (entry_pos_def-1, entry_pos_att-1))
                         sys.stdout.flush()
+
+                    print(def_str)
+                    print(att_str)
+
 
                     att_nn = att_str_dict[att_str]
                     def_nn = def_str_dict[def_str]
 
-                    aReward, dReward = series_sim_combined(env, att_nn, def_nn, num_episodes)
+                    aReward, dReward = series_sim_combined(env, att_nn, def_nn, num_episodes=5)
 
                     payoff_matrix_att[entry_pos_def-1, entry_pos_att-1] = aReward
                     payoff_matrix_def[entry_pos_def-1, entry_pos_att-1] = dReward
@@ -59,15 +64,15 @@ def whole_payoff_matrix(num_str, child_partition, env_name='run_env_B', save_pat
                 # update the starting position.
                 method_pos_att += child_partition[key_att]
 
-        # Periodically saving the payoff matrix.
-        if save_path is None:
-            save_path = os.getcwd() + '/combined_game/matrice/'
-        if matrix_name is None:
-            fp.save_pkl(payoff_matrix_att, save_path + 'payoff_matrix_att.pkl')
-            fp.save_pkl(payoff_matrix_def, save_path + 'payoff_matrix_def.pkl')
-        else:
-            fp.save_pkl(payoff_matrix_att, save_path + 'payoff_matrix_att_' + matrix_name + '.pkl')
-            fp.save_pkl(payoff_matrix_def, save_path + 'payoff_matrix_def_' + matrix_name + '.pkl')
+        ## Periodically saving the payoff matrix.
+        # if save_path is None:
+        #     save_path = os.getcwd() + '/combined_game/matrice/'
+        # if matrix_name is None:
+        #     fp.save_pkl(payoff_matrix_att, save_path + 'payoff_matrix_att.pkl')
+        #     fp.save_pkl(payoff_matrix_def, save_path + 'payoff_matrix_def.pkl')
+        # else:
+        #     fp.save_pkl(payoff_matrix_att, save_path + 'payoff_matrix_att_' + matrix_name + '.pkl')
+        #     fp.save_pkl(payoff_matrix_def, save_path + 'payoff_matrix_def_' + matrix_name + '.pkl')
         method_pos_def += child_partition[key_def]
 
     print('Done simulating payoff matrix of combined game.')
@@ -168,6 +173,7 @@ def scan_and_sim(methods_list):
     for method in methods_list:
         child_partition[method] = len(str_dict_def[method])
         total_num_str += child_partition[method]
+
 
     payoff_matrix_att, payoff_matrix_def = whole_payoff_matrix(total_num_str, child_partition)
 
