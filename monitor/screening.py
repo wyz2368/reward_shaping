@@ -3,9 +3,24 @@ import numpy as np
 from attackgraph.simulation import series_sim
 from attackgraph import file_op as fp
 import os
+import re
+
+"""
+This file conducts simulations for combined game. The strategies produced by different heuristics are stored in the 
+directory combined_game. Function screen loads the names of strategies from those files. Combined with run.py, we can
+simulate the payoff matrix of the combined game.
+"""
+
 
 def_str_abs_path = '/attackgraph/defender_strategies/'
 att_str_abs_path = '/attackgraph/attacker_strategies/'
+
+def preprocess_file(file):
+    numbers = re.compile(r'(\d+)')
+    parts = numbers.split(file)
+    parts[1::2] = map(int, parts[1::2])
+    return parts
+
 
 def screen(paths):
     '''
@@ -16,8 +31,18 @@ def screen(paths):
     str_dict_def = {}
     str_dict_att = {}
     for method in paths:
-        str_dict_def[method] = set(glob1(paths[method] + def_str_abs_path, "*.pkl"))
-        str_dict_att[method] = set(glob1(paths[method] + att_str_abs_path, "*.pkl"))
+        print("Checking strategies in ", method)
+        path_def = paths[method] + def_str_abs_path
+        path_att = paths[method] + att_str_abs_path
+
+        if not fp.isExist(path_def):
+            raise ValueError("Defender's strategy path does not exist.")
+        elif not fp.isExist(path_att):
+            raise ValueError("Attacker's strategy path does not exist.")
+
+        # Remove the uniform strategy
+        str_dict_def[method] = sorted(glob1(path_def, "*.pkl"), key=preprocess_file)[1:]
+        str_dict_att[method] = sorted(glob1(path_att, "*.pkl"), key=preprocess_file)[1:]
         if len(str_dict_def[method]) == 0 or len(str_dict_att[method]) == 0:
             raise ValueError("There is no strategy in the strategy directory.")
 

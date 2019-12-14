@@ -65,8 +65,6 @@ import datetime
 # a = glob.glob1(os.getcwd()+'/gambit_data/',"*")
 # print(type(a))
 
-# a = np.array([1,2,3,4,5,6,7,8])
-# a[-3:] = np.array([9,9,9])
-# print(a)
-
-print(10 % 2)
+a = {0:np.array([0.3,0.2,0]),1:np.array([0.3,0.2,0.5])}
+a[0][a[0]>0] = 1
+print(a)

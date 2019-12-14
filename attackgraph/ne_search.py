@@ -88,9 +88,6 @@ def subgame_ne_search(num_str, main_method, nash_eq, payoff_matrice, child_parti
 
 
 
-
-
-
 def init_simulation(num_str,
                     main_method,
                     child_partition,
@@ -217,13 +214,14 @@ def ranking_ne(method, nasheq, deviation_att, deviation_def, ne_memory):
 The code below simulate the complete payoff matrix.
 """
 
-def whole_payoff_matrix(num_str, child_partition, env_name='run_env_B'):
+def whole_payoff_matrix(num_str, child_partition, env_name='run_env_B', save_path=None, str_path_dict=None, matrix_name=None):
     """
     Simulate the complete payoff matrix.
     :param num_str: number of total strategies.
     :param child_partition: a dict recording number of strategies for each child game. {"baseline": 40, "RS":40}
     :param env_name: name of envrionment
     :param str_range: the range of strategies to be simulated. {"start": 3, "end": 20}
+    :param str_path_dict: {0/1:{'baselines': '/home/wangyzh/baselines/attackgraph/attacker_strategies/'}}
     :return: NE
     """
     print('Begin simulating payoff matrix of combined game.')
@@ -237,8 +235,8 @@ def whole_payoff_matrix(num_str, child_partition, env_name='run_env_B'):
     payoff_matrix_def = np.zeros((num_str, num_str))
 
     #TODO: check the load path.
-    att_str_dict = load_policies(game, child_partition, identity=0)
-    def_str_dict = load_policies(game, child_partition, identity=1)
+    att_str_dict = load_policies(game, child_partition, identity=0, path_dict=str_path_dict)
+    def_str_dict = load_policies(game, child_partition, identity=1, path_dict=str_path_dict)
 
     # method_pos_def records the starting idx of each method when combined.
     method_pos_def = 0
@@ -268,9 +266,14 @@ def whole_payoff_matrix(num_str, child_partition, env_name='run_env_B'):
                 method_pos_att += child_partition[key_att]
 
         # Periodically saving the payoff matrix.
-        save_path = os.getcwd() + '/combined_game/'
-        fp.save_pkl(payoff_matrix_att, save_path + 'payoff_matrix_att.pkl')
-        fp.save_pkl(payoff_matrix_def, save_path + 'payoff_matrix_def.pkl')
+        if save_path is None:
+            save_path = os.getcwd() + '/combined_game/matrice/'
+        if matrix_name is None:
+            fp.save_pkl(payoff_matrix_att, save_path + 'payoff_matrix_att.pkl')
+            fp.save_pkl(payoff_matrix_def, save_path + 'payoff_matrix_def.pkl')
+        else:
+            fp.save_pkl(payoff_matrix_att, save_path + 'payoff_matrix_att_' + matrix_name + '.pkl')
+            fp.save_pkl(payoff_matrix_def, save_path + 'payoff_matrix_def_' + matrix_name + '.pkl')
         method_pos_def += child_partition[key_def]
 
     print('Done simulating payoff matrix of combined game.')
@@ -302,9 +305,9 @@ def regret(nash_att, nash_def, payoffmatrix_att, payoffmatrix_def):
 
     return regret_att, regret_def
 
-#TODO: change the split point according to child_partition.
-def mean_regret(regret_att, regret_def, child_partition):
 
+#TODO: change the split point according to child_partition. Mean regret does not make sense.
+def mean_regret(regret_att, regret_def, child_partition):
     mean_reg_att = []
     mean_reg_def = []
     mean_reg_att.append(np.round(np.mean(regret_att[1:41]), decimals=2))
@@ -315,10 +318,31 @@ def mean_regret(regret_att, regret_def, child_partition):
     mean_reg_def.append(np.round(np.mean(regret_def[84:124]), decimals=2))
     return mean_reg_att, mean_reg_def
 
+
+def NE_regret(regret_att, regret_def, ne_dict):
+    """
+    Calculate the regret of each heuristic with respect to the combined game. The strategies of each heuristic only\
+    include those in the NE of each heuristic.
+    :param regret_att: attacker's regret vector calculated from combined game.
+    :param regret_def: defender's regret vector calculated from combined game.
+    :param ne_dict: {"baseline": np.array([1,0,1,0...]), "RS": np.array([0,0,1,0...])} when a strategy is in a NE, that strategy is indicated by 1.
+    :return:
+    """
+    num_method = len(ne_dict.keys())
+    for method in ne_dict:
+        pass
+
+
+
+
 # Measure the regret of subgames during strategy exploration.
 def regret_curve():
     pass
 
+
+# Replaceability Implementation.
+def replaceability():
+    pass
 
 
 def series_sim_combined(env, nn_att, nn_def, num_episodes):
@@ -413,34 +437,59 @@ def scope_finder(policy_path):
     return scope
 
 # Load all policies into a dictionary.
-def load_policies(game, child_partition, identity):
+def load_policies(game, child_partition, identity, path_dict=None):
     if identity == 0: # load defender's policies.
         mid_name = '_def_str_epoch'
-        path = str_path_def
+        if path_dict is None:
+            path = str_path_def
     elif identity == 1:
         mid_name = '_att_str_epoch'
-        path = str_path_att
+        if path_dict is None:
+            path = str_path_att
     else:
         raise ValueError("identity is not correct")
 
     str_dict = {}
-    for key in child_partition:
-        for i in np.arange(1, child_partition[key]+1):
-            nn = key + mid_name + str(i+1) + '.pkl'
+    if path_dict is None:
+        for key in child_partition:
+            for i in np.arange(1, child_partition[key]+1):
+                nn = key + mid_name + str(i+1) + '.pkl'
 
-            uniform_flag = False
-            if "epoch1.pkl" in nn:
-                uniform_flag = True
+                uniform_flag = False
+                if "epoch1.pkl" in nn:
+                    uniform_flag = True
 
-            load_path = path + nn
+                load_path = path + nn
 
-            # Strategies are kept as a tuple with parameters, session, graph.
-            if uniform_flag:
-                nn_act = fp.load_pkl(load_path)
-                str_dict[nn] = (nn_act, None, None)
-            else:
-                scope = scope_finder(path)
-                nn_act, sess, graph = load_action_class(load_path, scope, game, training_flag=identity)
-                str_dict[nn] = (nn_act, sess, graph)
+                # Strategies are kept as a tuple with parameters, session, graph.
+                if uniform_flag:
+                    nn_act = fp.load_pkl(load_path)
+                    str_dict[nn] = (nn_act, None, None)
+                else:
+                    scope = scope_finder(path)
+                    nn_act, sess, graph = load_action_class(load_path, scope, game, training_flag=identity)
+                    str_dict[nn] = (nn_act, sess, graph)
+    else:
+        for key in child_partition:
+            str_dict[key] = {}
+            for i in np.arange(1, child_partition[key] + 1):
+                nn = key + mid_name + str(i + 1) + '.pkl'
+
+                uniform_flag = False
+                if "epoch1.pkl" in nn:
+                    uniform_flag = True
+
+
+                path = path_dict[identity][key]
+                load_path = path + nn
+
+                # Strategies are kept as a tuple with parameters, session, graph.
+                if uniform_flag:
+                    nn_act = fp.load_pkl(load_path)
+                    str_dict[key][nn] = (nn_act, None, None)
+                else:
+                    scope = scope_finder(path)
+                    nn_act, sess, graph = load_action_class(load_path, scope, game, training_flag=identity)
+                    str_dict[key][nn] = (nn_act, sess, graph)
 
     return str_dict

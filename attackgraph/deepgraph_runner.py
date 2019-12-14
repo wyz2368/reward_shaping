@@ -155,12 +155,16 @@ def EGTA(env, game, start_hado=2, retrain=False, epoch=1, game_path=os.getcwd() 
         #     mix_str_def[-4:] = np.array([0.1, 0.1, 0.3, 0.5])
         #     mix_str_att[-4:] = np.array([0.1, 0.1, 0.3, 0.5])
 
-        #against the newest opponent
+        #against the newest opponent (self-play)
         # mix_str_def = np.zeros(len(game.nasheq[epoch][0]))
         # mix_str_def[-1] = 1
         # mix_str_att = np.zeros(len(game.nasheq[epoch][1]))
         # mix_str_att[-1] = 1
 
+        # fictitious play
+        # l = len(game.nasheq[epoch][0])
+        # mix_str_def = np.ones(l) / l
+        # mix_str_att = np.ones(l) / l
 
         # meta-solvers
         # mix_str_def, mix_str_att = mixed_ne(game, epoch)
@@ -207,6 +211,16 @@ def EGTA(env, game, start_hado=2, retrain=False, epoch=1, game_path=os.getcwd() 
         #     mix_str_att = game.nasheq[epoch][1]
         # else:
         #     mix_str_def, mix_str_att = weight_ne_finite_mem(game, epoch, gamma=game.gamma, mem_size=game.mem_size)
+
+        # (4) alternating between BR and self-play
+        # if epoch % 2 == 0:
+        #     mix_str_def = game.nasheq[epoch][0]
+        #     mix_str_att = game.nasheq[epoch][1]
+        # else:
+        #     mix_str_def = np.zeros(len(game.nasheq[epoch][0]))
+        #     mix_str_def[-1] = 1
+        #     mix_str_att = np.zeros(len(game.nasheq[epoch][1]))
+        #     mix_str_att[-1] = 1
 
 
         aPayoff, dPayoff = util.payoff_mixed_NE(game, epoch)
@@ -333,12 +347,29 @@ def EGTA_restart(restart_epoch, start_hado = 2, retrain=False, game_path = os.ge
 
     retrain_start = False
 
-    count = 100 - restart_epoch
+    count = 15 - restart_epoch
+    cali_flag = False
     while count != 0:
     # while True:
         # fix opponent strategy
-        # mix_str_def = game.nasheq[epoch][0]
-        # mix_str_att = game.nasheq[epoch][1]
+        # if not cali_flag:
+        #     mix_str_def = np.array([1])
+        #     mix_str_att = np.array([1])
+        #     cali_flag = True
+        # else:
+        #     mix_str_def = game.nasheq[epoch][0]
+        #     mix_str_att = game.nasheq[epoch][1]
+
+        # fictitious play
+        if not cali_flag:
+            mix_str_def = np.array([1])
+            mix_str_att = np.array([1])
+            cali_flag = True
+        else:
+            l = len(game.nasheq[epoch][0])
+            mix_str_def = np.ones(l) / l
+            mix_str_att = np.ones(l) / l
+
 
         #Test mixed strategy
         # rand = np.random.rand(len(game.nasheq[epoch][0]))
@@ -346,10 +377,10 @@ def EGTA_restart(restart_epoch, start_hado = 2, retrain=False, game_path = os.ge
         # mix_str_att = rand/np.sum(rand)
 
         #against the first strategy
-        mix_str_def = np.zeros(len(game.nasheq[epoch][0]))
-        mix_str_def[0] = 1
-        mix_str_att = np.zeros(len(game.nasheq[epoch][1]))
-        mix_str_att[0] = 1
+        # mix_str_def = np.zeros(len(game.nasheq[epoch][0]))
+        # mix_str_def[0] = 1
+        # mix_str_att = np.zeros(len(game.nasheq[epoch][1]))
+        # mix_str_att[0] = 1
 
         # meta-solvers
         # mix_str_def, mix_str_att = mixed_ne(game, epoch)
@@ -465,13 +496,15 @@ def EGTA_restart(restart_epoch, start_hado = 2, retrain=False, game_path = os.ge
 
 if __name__ == '__main__':
     warnings.filterwarnings("ignore")
-    game = initialize(load_env='run_env_B', env_name=None)
+    # game = initialize(load_env='run_env_B', env_name=None)
     # game = initialize(load_env='run_env_Bhard', env_name=None)
-    # game = initialize(load_env='run_env_sep_B', env_name=None)
+    game = initialize(load_env='run_env_sep_B', env_name=None)
     # game = initialize(load_env='run_env_sep_AND', env_name=None)
     # game = initialize(load_env='run_env_B_costly', env_name=None)
     # EGTA(env, game, retrain=True)
     EGTA(game.env, game, retrain=False)
+
+    # restart should save to a different output doc.
     # EGTA_restart(restart_epoch=31)
 
 
