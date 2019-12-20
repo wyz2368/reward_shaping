@@ -7,6 +7,7 @@ import copy
 import glob
 from psutil import virtual_memory
 from queue import PriorityQueue as pq
+from attackgraph.cournot import extract_submatrix
 
 # # import networkx as nx
 import random
@@ -64,6 +65,10 @@ import datetime
 
 # a = glob.glob1(os.getcwd()+'/gambit_data/',"*")
 # print(type(a))
+# a = np.random.randint(1,9,(4,4))
+# print(a)
+# print(extract_submatrix([0,2], [0,1,2], a))
 
-a = os.getcwd()
-print(fp.isExist(a))
+a = np.array([[1],[2],[3]])
+print(np.max(a))
+

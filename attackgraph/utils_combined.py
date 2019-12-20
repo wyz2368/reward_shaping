@@ -33,6 +33,9 @@ def screen(paths):
         path_def = paths[method] + def_str_abs_path
         path_att = paths[method] + att_str_abs_path
 
+        print("Defender's load path is ", path_def)
+        print("Attacker's load path is ", path_att)
+
         if not fp.isExist(path_def):
             raise ValueError("Defender's strategy path does not exist.")
         elif not fp.isExist(path_att):
@@ -66,6 +69,7 @@ def load_policies(game, child_partition, identity):
     str_dict = {}
 
     path = os.getcwd() + '/combined_game/'
+
     for key in child_partition:
         for i in np.arange(1, child_partition[key]+1):
             # nn = "RS/attacker_strategies/def_str_epoch2.pkl"
@@ -112,3 +116,4 @@ def create_paths(methods_list):
     for method in methods_list:
         paths[method] = os.getcwd() + '/combined_game/' + method
     return paths
+

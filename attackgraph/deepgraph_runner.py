@@ -130,8 +130,8 @@ def EGTA(env, game, start_hado=2, retrain=False, epoch=1, game_path=os.getcwd() 
     # while True:
         mem0 = proc.memory_info().rss
         # fix opponent strategy
-        mix_str_def = game.nasheq[epoch][0]
-        mix_str_att = game.nasheq[epoch][1]
+        # mix_str_def = game.nasheq[epoch][0]
+        # mix_str_att = game.nasheq[epoch][1]
 
         #Test mixed strategy
         # rand = np.random.rand(len(game.nasheq[epoch][0]))
@@ -213,14 +213,14 @@ def EGTA(env, game, start_hado=2, retrain=False, epoch=1, game_path=os.getcwd() 
         #     mix_str_def, mix_str_att = weight_ne_finite_mem(game, epoch, gamma=game.gamma, mem_size=game.mem_size)
 
         # (4) alternating between BR and self-play
-        # if epoch % 2 == 0:
-        #     mix_str_def = game.nasheq[epoch][0]
-        #     mix_str_att = game.nasheq[epoch][1]
-        # else:
-        #     mix_str_def = np.zeros(len(game.nasheq[epoch][0]))
-        #     mix_str_def[-1] = 1
-        #     mix_str_att = np.zeros(len(game.nasheq[epoch][1]))
-        #     mix_str_att[-1] = 1
+        if epoch % 2 == 0:
+            mix_str_def = game.nasheq[epoch][0]
+            mix_str_att = game.nasheq[epoch][1]
+        else:
+            mix_str_def = np.zeros(len(game.nasheq[epoch][0]))
+            mix_str_def[-1] = 1
+            mix_str_att = np.zeros(len(game.nasheq[epoch][1]))
+            mix_str_att[-1] = 1
 
 
         aPayoff, dPayoff = util.payoff_mixed_NE(game, epoch)
@@ -496,9 +496,10 @@ def EGTA_restart(restart_epoch, start_hado = 2, retrain=False, game_path = os.ge
 
 if __name__ == '__main__':
     warnings.filterwarnings("ignore")
-    # game = initialize(load_env='run_env_B', env_name=None)
+    # game = initialize(load_env='run_env', env_name=None)
+    game = initialize(load_env='run_env_B', env_name=None)
     # game = initialize(load_env='run_env_Bhard', env_name=None)
-    game = initialize(load_env='run_env_sep_B', env_name=None)
+    # game = initialize(load_env='run_env_sep_B', env_name=None)
     # game = initialize(load_env='run_env_sep_AND', env_name=None)
     # game = initialize(load_env='run_env_B_costly', env_name=None)
     # EGTA(env, game, retrain=True)

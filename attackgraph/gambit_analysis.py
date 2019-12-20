@@ -61,16 +61,18 @@ def decode_gambit_file():
 
     return nash_att, nash_def
 
-def do_gambit_analysis(poDef, poAtt, maxent=False, minent=False, num_nash=None):
+def do_gambit_analysis(poDef, poAtt, maxent=False, minent=False, num_nash=None, return_list=False):
     timeout = 600
     encode_gambit_file(poDef, poAtt) #TODO:change timeout adaptive
     while True:
         gambit_analysis(timeout)
-        if not maxent and not minent:
+        if not maxent and not minent and not return_list:
             # pick random NE.
             nash_att, nash_def = decode_gambit_file()
-        else:
+        elif return_list:
             # pick required NE.
+            nash_att, nash_def = decode_gambit_file_multiple_NEs(maxent, minent, num_nash, return_list)
+        else:
             nash_att, nash_def = decode_gambit_file_multiple_NEs(maxent, minent, num_nash)
         timeout += 120
         if timeout > 7200:
@@ -109,7 +111,7 @@ def maxent_NE(nash_list):
     if len(nash_list) == 0:
         raise ValueError("The length of Nash list is zero.")
     for nash in nash_list:
-        print(nash)
+        # print(nash)
         H = entropy_NE(nash)
         H_list = np.append(H_list, H)
 
@@ -143,7 +145,7 @@ def entropy_NE(nash):
         H -= p*np.log(p)
     return H
 
-def decode_gambit_file_multiple_NEs(maxent, minent, num_nash):
+def decode_gambit_file_multiple_NEs(maxent, minent, num_nash, return_list=False):
     nash_DIR = os.getcwd() + '/gambit_data/nash.txt'
     if not fp.isExist(nash_DIR):
         raise ValueError("nash.txt file does not exist!")
@@ -175,6 +177,9 @@ def decode_gambit_file_multiple_NEs(maxent, minent, num_nash):
 
     if len(nash_att_list) == 0 or len(nash_def_list)==0:
             return 0,0
+
+    if return_list:
+        return nash_att_list, nash_def_list
 
     if maxent:
         nash_att = maxent_NE(nash_att_list)
