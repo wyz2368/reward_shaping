@@ -57,6 +57,7 @@ def beneficial_dev(nash_idx, nash, p1_payoff):
         act[int(idx)] = ne
     util_vect = np.sum(p1_payoff * act, axis=1)
     util_vect = np.reshape(util_vect, newshape=(len(util_vect),))
+
     x = np.argmax(util_vect)
     return x / 2
 
@@ -83,7 +84,7 @@ def create_payoff_matrix():
             j += 1
 
         i += 1
-    print(p1_payoff)
+    # print(p1_payoff)
     return p1_payoff, p2_payoff
 
 def extract_submatrix(idx_x, idx_y, matrix):
@@ -120,7 +121,34 @@ def regret(nash_1, nash_2, str_p1, str_p2, subgame_u1, subgame_u2, p1_payoff, p2
 
     return np.maximum(regret_p1, regret_p2)
 
+def NashConv(nash_1, nash_2, str_p1, str_p2, subgame_u1, subgame_u2, p1_payoff, p2_payoff):
+    nash_1 = np.reshape(nash_1, newshape=(len(nash_1),1))
+    ne_u1 = np.sum(nash_1 * subgame_u1 * nash_2)
+    ne_u2 = np.sum(nash_1 * subgame_u2 * nash_2)
+
+    dim, _ = np.shape(p1_payoff)
+
+    ne_1 = np.zeros(dim)
+    ne_2 = np.zeros(dim)
+
+    for i, value in zip(str_p1, nash_1):
+        ne_1[int(i*2)] = value
+    ne_1 = np.reshape(ne_1, newshape=(len(ne_1), 1))
+
+    for i, value in zip(str_p2, nash_2):
+        ne_2[int(i*2)] = value
+
+
+    max_u1 = np.max(np.sum(p1_payoff * ne_2, axis=1))
+    max_u2 = np.max(np.sum(ne_1 * p2_payoff, axis=0))
+
+    regret_p1 = np.maximum(max_u1 - ne_u1, 0)
+    regret_p2 = np.maximum(max_u2 - ne_u2, 0)
+
+    return regret_p1 + regret_p2
+
 def run(p1_payoff, p2_payoff):
+    np.random.seed(0)
     regret_list = []
     str_p1 = []
     str_p2 = []
@@ -138,8 +166,13 @@ def run(p1_payoff, p2_payoff):
         regret_list.append(regret(nash_1, nash_2, np.array(str_p1), np.array(str_p2), subgame_u1, subgame_u2, p1_payoff, p2_payoff))
 
         # DO solver
-        x1 = BR(np.array(str_p2) * 2, nash_2, p1_payoff)
-        x2 = BR(np.array(str_p1) * 2, nash_1, p1_payoff)
+        # x1 = BR(np.array(str_p2) * 2, nash_2, p1_payoff)
+        # x2 = BR(np.array(str_p1) * 2, nash_1, p1_payoff)
+
+        # random
+        # x1 = rand(np.array(str_p1))
+        # x2 = rand(np.array(str_p2))
+
 
         if x1 not in str_p1:
             str_p1.append(x1)
@@ -154,7 +187,7 @@ def run(p1_payoff, p2_payoff):
             print(regret_list)
 
 p1_payoff, p2_payoff = create_payoff_matrix()
-# run(p1_payoff, p2_payoff)
+run(p1_payoff, p2_payoff)
 
 
 

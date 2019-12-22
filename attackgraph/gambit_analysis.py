@@ -62,7 +62,7 @@ def decode_gambit_file():
     return nash_att, nash_def
 
 def do_gambit_analysis(poDef, poAtt, maxent=False, minent=False, num_nash=None, return_list=False):
-    timeout = 600
+    timeout = 60
     encode_gambit_file(poDef, poAtt) #TODO:change timeout adaptive
     while True:
         gambit_analysis(timeout)
@@ -78,6 +78,8 @@ def do_gambit_analysis(poDef, poAtt, maxent=False, minent=False, num_nash=None, 
         if timeout > 7200:
             print("Gambit has been running for more than 2 hour.!")
         if isinstance(nash_def,np.ndarray) and isinstance(nash_att,np.ndarray):
+            break
+        if isinstance(nash_def,list) and isinstance(nash_att,list):
             break
         print("Timeout has been added by 120s.")
     print('gambit_analysis done!')
