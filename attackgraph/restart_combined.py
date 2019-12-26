@@ -9,7 +9,14 @@ import random
 import sys
 
 
-def whole_payoff_matrix(num_str, child_partition, env_name='run_env_B', save_path=None, matrix_name=None):
+def whole_payoff_matrix_restart(num_str,
+                                child_partition,
+                                done_list,
+                                payoff_matrix_att,
+                                payoff_matrix_def,
+                                env_name='run_env_B',
+                                save_path=None,
+                                matrix_name=None):
     """
     Simulate the complete payoff matrix.
     :param num_str: number of total strategies.
@@ -31,8 +38,8 @@ def whole_payoff_matrix(num_str, child_partition, env_name='run_env_B', save_pat
     num_episodes = game.num_episodes
 
     # Assume two players have the same number of strategies.
-    payoff_matrix_att = np.zeros((num_str, num_str))
-    payoff_matrix_def = np.zeros((num_str, num_str))
+    # payoff_matrix_att = np.zeros((num_str, num_str))
+    # payoff_matrix_def = np.zeros((num_str, num_str))
 
     att_str_dict = load_policies(game, child_partition, identity=1)
     def_str_dict = load_policies(game, child_partition, identity=0)
@@ -40,6 +47,9 @@ def whole_payoff_matrix(num_str, child_partition, env_name='run_env_B', save_pat
     ## method_pos_def records the starting idx of each method when combined.
     method_pos_def = 0
     for key_def in child_partition:
+        if key_def in done_list:
+            method_pos_def += child_partition[key_def]
+            continue
         for i in np.arange(1, child_partition[key_def]+1):
             def_str = key_def + '/defender_strategies/def_str_epoch' + str(i+1) + '.pkl'
             entry_pos_def = method_pos_def + i
@@ -166,7 +176,7 @@ def series_sim_combined(env, nn_att, nn_def, num_episodes):
     return np.round(np.mean(aReward_list),2), np.round(np.mean(dReward_list),2)
 
 
-def scan_and_sim(methods_list):
+def scan_and_sim_restart(methods_list, done_list):
     paths = create_paths(methods_list)
     str_dict_def, str_dict_att = screen(paths)
 
@@ -178,7 +188,15 @@ def scan_and_sim(methods_list):
         print("Method is ", method, "which has " , child_partition[method], " strategies.")
         total_num_str += child_partition[method]
 
+    load_path = os.getcwd() + '/combined_game/matrice/'
+    payoff_matrix_att = fp.load_pkl(load_path + 'payoff_matrix_att.pkl')
+    payoff_matrix_def = fp.load_pkl(load_path + 'payoff_matrix_def.pkl')
 
-    payoff_matrix_att, payoff_matrix_def = whole_payoff_matrix(total_num_str, child_partition)
+
+    payoff_matrix_att, payoff_matrix_def = whole_payoff_matrix_restart(total_num_str,
+                                                                       child_partition,
+                                                                       done_list,
+                                                                       payoff_matrix_att,
+                                                                       payoff_matrix_def)
 
     return payoff_matrix_att, payoff_matrix_def, child_partition

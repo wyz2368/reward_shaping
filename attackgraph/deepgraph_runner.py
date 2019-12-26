@@ -213,14 +213,27 @@ def EGTA(env, game, start_hado=2, retrain=False, epoch=1, game_path=os.getcwd() 
         #     mix_str_def, mix_str_att = weight_ne_finite_mem(game, epoch, gamma=game.gamma, mem_size=game.mem_size)
 
         # (4) alternating between BR and self-play
-        if epoch % 2 == 0:
+        # if epoch % 2 == 0:
+        #     mix_str_def = game.nasheq[epoch][0]
+        #     mix_str_att = game.nasheq[epoch][1]
+        # else:
+        #     mix_str_def = np.zeros(len(game.nasheq[epoch][0]))
+        #     mix_str_def[-1] = 1
+        #     mix_str_att = np.zeros(len(game.nasheq[epoch][1]))
+        #     mix_str_att[-1] = 1
+
+        # (5) first alternating between BR and self-play and then BR
+        if epoch % 2 == 0 and epoch < 40:
             mix_str_def = game.nasheq[epoch][0]
             mix_str_att = game.nasheq[epoch][1]
-        else:
+        elif epoch % 2 == 1 and epoch < 40:
             mix_str_def = np.zeros(len(game.nasheq[epoch][0]))
             mix_str_def[-1] = 1
             mix_str_att = np.zeros(len(game.nasheq[epoch][1]))
             mix_str_att[-1] = 1
+        else:
+            mix_str_def = game.nasheq[epoch][0]
+            mix_str_att = game.nasheq[epoch][1]
 
 
         aPayoff, dPayoff = util.payoff_mixed_NE(game, epoch)

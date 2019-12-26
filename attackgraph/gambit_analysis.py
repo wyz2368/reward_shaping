@@ -25,6 +25,8 @@ def encode_gambit_file(poDef, poAtt):
         # Write strategies
         nfgFile.write('{ ' + str(poDef.shape[0]) + ' ' + str(poDef.shape[1]) +' }\n\n')
         # Write outcomes
+        if poDef.shape[1] == 0:
+            raise ValueError("There is no matrix in payoffmatrix.nfg. Please check input matrix.")
         for i in range(poDef.shape[1]):
             for j in range(poDef.shape[0]):
                 nfgFile.write(str(poDef[j][i]) + " ")
@@ -62,7 +64,7 @@ def decode_gambit_file():
     return nash_att, nash_def
 
 def do_gambit_analysis(poDef, poAtt, maxent=False, minent=False, num_nash=None, return_list=False):
-    timeout = 60
+    timeout = 600
     encode_gambit_file(poDef, poAtt) #TODO:change timeout adaptive
     while True:
         gambit_analysis(timeout)
