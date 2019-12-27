@@ -58,7 +58,7 @@ def beneficial_dev(nash_idx, nash, p1_payoff):
     util_vect = np.sum(p1_payoff * act, axis=1)
     util_vect = np.reshape(util_vect, newshape=(len(util_vect),))
 
-    x = np.argmax(util_vect)
+    x = np.argsort(util_vect)[-2]
     return x / 2
 
 
@@ -159,32 +159,57 @@ def run(p1_payoff, p2_payoff):
     subgame_u1 = extract_submatrix(np.array(str_p1) * 2, np.array(str_p2) * 2, p1_payoff)
     subgame_u2 = extract_submatrix(np.array(str_p1) * 2, np.array(str_p2) * 2, p2_payoff)
     is_terminal = True
+    switch = False
     while is_terminal:
         epoch += 1
+        nelist = do_gambit_analysis(subgame_u1, subgame_u2, return_list=True)
         # nash_2, nash_1 = do_gambit_analysis(subgame_u1, subgame_u2, maxent=False, minent=True)
         nash_2, nash_1 = do_gambit_analysis(subgame_u1, subgame_u2, maxent=True, minent=False)
         regret_list.append(regret(nash_1, nash_2, np.array(str_p1), np.array(str_p2), subgame_u1, subgame_u2, p1_payoff, p2_payoff))
 
         # DO solver
-        # x1 = BR(np.array(str_p2) * 2, nash_2, p1_payoff)
-        # x2 = BR(np.array(str_p1) * 2, nash_1, p1_payoff)
+        if switch:
+            x1 = BR(np.array(str_p2) * 2, nash_2, p1_payoff)
+            x2 = BR(np.array(str_p1) * 2, nash_1, p1_payoff)
+
+        # Beneficial Deviation
+        if not switch:
+            x1 = beneficial_dev(np.array(str_p2) * 2, nash_2, p1_payoff)
+            x2 = beneficial_dev(np.array(str_p1) * 2, nash_1, p1_payoff)
 
         # random
         # x1 = rand(np.array(str_p1))
         # x2 = rand(np.array(str_p2))
 
+        if epoch == 10:
+            switch = True
 
-        if x1 not in str_p1:
-            str_p1.append(x1)
-        if x2 not in str_p2:
-            str_p2.append(x2)
+        str_p1.append(x1)
+        str_p2.append(x2)
+
+        print("--------------------------------")
+        print("Current Epoch is ", epoch)
+        print("ne_list:", nelist)
+        print("Current NE is ", nash_1, nash_2)
+        print("x1:", str_p1)
+        print("x2:", str_p2)
+
+
+        # if x1 not in str_p1:
+        #     str_p1.append(x1)
+        # if x2 not in str_p2:
+        #     str_p2.append(x2)
+
+
 
         subgame_u1 = extract_submatrix(np.array(str_p1) * 2, np.array(str_p2) * 2, p1_payoff)
         subgame_u2 = extract_submatrix(np.array(str_p1) * 2, np.array(str_p2) * 2, p2_payoff)
 
-        if epoch == 8:
+        if epoch == 20:
             is_terminal = False
             print(regret_list)
+            print("x1:", str_p1)
+            print("x2:", str_p2)
 
 p1_payoff, p2_payoff = create_payoff_matrix()
 run(p1_payoff, p2_payoff)

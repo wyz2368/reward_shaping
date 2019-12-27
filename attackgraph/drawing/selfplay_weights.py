@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-# path = os.getcwd() + '/drawing/game_data/' + 'game_BR_selfplay.pkl'
-path = os.getcwd() + '/drawing/game_data/' + 'game_randA.pkl'
+path = os.getcwd() + '/drawing/game_data/' + 'game_BR_selfplay.pkl'
+# path = os.getcwd() + '/drawing/game_data/' + 'game_randA.pkl'
 # path = os.getcwd() + '/drawing/game_data/' + 'game_sep.pkl'
 game = fp.load_pkl(path)
 
@@ -21,6 +21,10 @@ for epoch in nasheq:
         continue
     if epoch % 2 == 0:
         labels.append(epoch)
+        if epoch > 60:
+            weights_def.append(0)
+            weights_att.append(0)
+            continue
         weights_def.append(nasheq[epoch][0][-1])
         weights_att.append(nasheq[epoch][1][-1])
 
@@ -40,7 +44,7 @@ rects2 = ax.bar(x + width/2, weights_att, width, label='Attacker')
 
 # Add some text for labels, title and custom x-axis tick labels, etc.
 ax.set_ylabel('Weights')
-ax.set_title('Weights on Strategies from Self-play on Random Graph 2')
+ax.set_title('Weights on Strategies from Self-play on Random Graph')
 ax.set_xticks(x)
 ax.set_xticklabels(labels)
 ax.legend()

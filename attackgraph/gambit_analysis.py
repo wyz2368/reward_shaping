@@ -85,6 +85,12 @@ def do_gambit_analysis(poDef, poAtt, maxent=False, minent=False, num_nash=None, 
             break
         print("Timeout has been added by 120s.")
     print('gambit_analysis done!')
+    if isinstance(nash_def,list) and isinstance(nash_att,list):
+        ne_list = []
+        for item in zip(nash_att, nash_def):
+            ne_list.append(item)
+        return ne_list
+
     return  nash_att, nash_def
 
 
@@ -110,33 +116,49 @@ def add_new_NE(game, nash_att, nash_def, epoch):
 
 
 # Calculate the entropy of NE.
-def maxent_NE(nash_list):
+def maxent_NE(nash_att_list, nash_def_list):
+    ne_pair = zip(nash_att_list, nash_def_list)
     H_list = np.array([])
-    if len(nash_list) == 0:
+    ne_list = []
+    if len(nash_att_list) == 0 or len(nash_def_list) == 0:
         raise ValueError("The length of Nash list is zero.")
-    for nash in nash_list:
-        # print(nash)
-        H = entropy_NE(nash)
+
+    for nash_att, nash_def in ne_pair:
+        ne_list.append((nash_att, nash_def ))
+        entropy_item = np.array([])
+        for item in nash_att:
+            entropy_item = np.append(entropy_item, nash_def * item)
+        H = entropy_NE(entropy_item)
         H_list = np.append(H_list, H)
 
-    if len(H_list)==0:
+    if len(H_list) == 0:
         raise ValueError("The length of entropy list is zero.")
-    nash_selected = nash_list[np.argmax(H_list)]
-    return nash_selected
 
 
-def minent_NE(nash_list):
+    nash_att, nash_def = ne_list[np.argmax(H_list)]
+    return nash_att, nash_def
+
+
+def minent_NE(nash_att_list, nash_def_list):
+    ne_pair = zip(nash_att_list, nash_def_list)
     H_list = np.array([])
-    if len(nash_list) == 0:
+    ne_list = []
+    if len(nash_att_list) == 0 or len(nash_def_list) == 0:
         raise ValueError("The length of Nash list is zero.")
-    for nash in nash_list:
-        H = entropy_NE(nash)
+
+    for nash_att, nash_def in ne_pair:
+        ne_list.append((nash_att, nash_def))
+        entropy_item = np.array([])
+        for item in nash_att:
+            entropy_item = np.append(entropy_item, nash_def * item)
+        H = entropy_NE(entropy_item)
         H_list = np.append(H_list, H)
 
-    if len(H_list)==0:
+    if len(H_list) == 0:
         raise ValueError("The length of entropy list is zero.")
-    nash_selected = nash_list[np.argmin(H_list)]
-    return nash_selected
+
+    nash_att, nash_def = ne_list[np.argmin(H_list)]
+    return nash_att, nash_def
 
 
 def entropy_NE(nash):
@@ -186,11 +208,9 @@ def decode_gambit_file_multiple_NEs(maxent, minent, num_nash, return_list=False)
         return nash_att_list, nash_def_list
 
     if maxent:
-        nash_att = maxent_NE(nash_att_list)
-        nash_def = maxent_NE(nash_def_list)
+        nash_att, nash_def = maxent_NE(nash_att_list, nash_def_list)
     elif minent:
-        nash_att = minent_NE(nash_att_list)
-        nash_def = minent_NE(nash_def_list)
+        nash_att, nash_def = minent_NE(nash_att_list, nash_def_list)
     else:
         raise ValueError("Falsely enter the multiple NE function.")
 

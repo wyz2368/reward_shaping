@@ -8,6 +8,7 @@ import glob
 from psutil import virtual_memory
 from queue import PriorityQueue as pq
 # from attackgraph.cournot import extract_submatrix
+from attackgraph.gambit_analysis import do_gambit_analysis
 
 # # import networkx as nx
 import random
@@ -19,8 +20,17 @@ import datetime
 # import pickle as pk
 #
 
-a = pq()
-a.put(('a',2))
-a.put(('b',1))
+# a = np.array([[1,0],[0,1]])
+# b = np.array([[1,0],[0,1]])
+#
+# ne_att, ne_def = do_gambit_analysis(a,b, maxent=False, minent=True, return_list=False)
+# ne_list = do_gambit_analysis(a,b, maxent=False, minent=False, return_list=True)
+#
+# print(ne_att, ne_def)
+# print(ne_list)
+#
 
-print(a.get()[0])
+
+
+
+

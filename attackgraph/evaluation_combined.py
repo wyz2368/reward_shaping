@@ -107,7 +107,7 @@ def regret_fixed_matrix(payoffmatrix_def, payoffmatrix_att, child_partition):
 
         nash_att, nash_def = do_gambit_analysis(submatrix_def, submatrix_att, maxent=True)
 
-        nash_def = np.reshape(nash_def,newshape=(len(nash_def), 1))
+        nash_def = np.reshape(nash_def, newshape=(len(nash_def), 1))
 
         ne_payoff_def = np.sum(nash_def * submatrix_def * nash_att)
         ne_payoff_att = np.sum(nash_def * submatrix_att * nash_att)
