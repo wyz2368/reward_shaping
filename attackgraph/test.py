@@ -29,8 +29,8 @@ import datetime
 # print(ne_att, ne_def)
 # print(ne_list)
 #
-
-
-
-
-
+a = np.zeros(10)
+b = np.array([1,2,3])
+b = a[:len(b)] + b
+print(b)
+print(a[:len(b)] + b)

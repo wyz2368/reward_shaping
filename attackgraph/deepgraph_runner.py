@@ -196,7 +196,7 @@ def EGTA(env, game, start_hado=2, retrain=False, epoch=1, game_path=os.getcwd() 
         #         rand_cnt = 2
         #         epoch_cnt = 5
 
-        # (2) alternating between BR and ficticious play
+        # (2) alternating between BR and fictitious play
         # if epoch % 2 == 0:
         #     mix_str_def = game.nasheq[epoch][0]
         #     mix_str_att = game.nasheq[epoch][1]
@@ -223,17 +223,32 @@ def EGTA(env, game, start_hado=2, retrain=False, epoch=1, game_path=os.getcwd() 
         #     mix_str_att[-1] = 1
 
         # (5) first alternating between BR and self-play and then BR
-        if epoch % 2 == 0 and epoch < 40:
+        # if epoch % 2 == 0 and epoch < 40:
+        #     mix_str_def = game.nasheq[epoch][0]
+        #     mix_str_att = game.nasheq[epoch][1]
+        # elif epoch % 2 == 1 and epoch < 40:
+        #     mix_str_def = np.zeros(len(game.nasheq[epoch][0]))
+        #     mix_str_def[-1] = 1
+        #     mix_str_att = np.zeros(len(game.nasheq[epoch][1]))
+        #     mix_str_att[-1] = 1
+        # else:
+        #     mix_str_def = game.nasheq[epoch][0]
+        #     mix_str_att = game.nasheq[epoch][1]
+
+        # (6) alternating between BR and fictitious play with finite memory
+        if epoch % 2 == 0:
             mix_str_def = game.nasheq[epoch][0]
             mix_str_att = game.nasheq[epoch][1]
-        elif epoch % 2 == 1 and epoch < 40:
-            mix_str_def = np.zeros(len(game.nasheq[epoch][0]))
-            mix_str_def[-1] = 1
-            mix_str_att = np.zeros(len(game.nasheq[epoch][1]))
-            mix_str_att[-1] = 1
         else:
-            mix_str_def = game.nasheq[epoch][0]
-            mix_str_att = game.nasheq[epoch][1]
+            memory = 10
+            l = len(game.nasheq[epoch][0])
+            mix_str_def = np.zeros(l)
+            mix_str_att = np.zeros(l)
+            mix_str_def[-memory:] = 1
+            mix_str_att[-memory:] = 1
+            mix_str_def = mix_str_def/np.sum(mix_str_def)
+            mix_str_att = mix_str_att/np.sum(mix_str_att)
+
 
 
         aPayoff, dPayoff = util.payoff_mixed_NE(game, epoch)
@@ -321,7 +336,7 @@ def EGTA(env, game, start_hado=2, retrain=False, epoch=1, game_path=os.getcwd() 
         payoffmatrix_def = game.payoffmatrix_def
         payoffmatrix_att = game.payoffmatrix_att
         print("Begin Gambit analysis.")
-        nash_att, nash_def = ga.do_gambit_analysis(payoffmatrix_def, payoffmatrix_att, maxent=False, minent=True)
+        nash_att, nash_def = ga.do_gambit_analysis(payoffmatrix_def, payoffmatrix_att, maxent=False, minent=False)
         ga.add_new_NE(game, nash_att, nash_def, epoch)
         game.env.attacker.nn_att = None
         game.env.defender.nn_def = None
@@ -484,7 +499,7 @@ def EGTA_restart(restart_epoch, start_hado = 2, retrain=False, game_path = os.ge
         payoffmatrix_def = game.payoffmatrix_def
         payoffmatrix_att = game.payoffmatrix_att
         print("Begin Gambit analysis.")
-        nash_att, nash_def = ga.do_gambit_analysis(payoffmatrix_def, payoffmatrix_att, maxent=False, minent=True)
+        nash_att, nash_def = ga.do_gambit_analysis(payoffmatrix_def, payoffmatrix_att, maxent=False, minent=False)
         print("Attacker's NE is", nash_att)
         print("Defender's NE is", nash_def)
         ga.add_new_NE(game, nash_att, nash_def, epoch)

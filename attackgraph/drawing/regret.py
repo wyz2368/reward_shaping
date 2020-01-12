@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from attackgraph import evaluation_combined as ec
+from attackgraph.utils_combined import create_paths, find_heuristic_position
 
 
 path_def = os.getcwd() + '/drawing/matrix/' + 'payoff_matrix_def.pkl'
@@ -21,8 +22,8 @@ print(np.shape(payoff_matrix_def))
 # payoff_matrix_att = np.delete(payoff_matrix_att, np.arange(51, 81), 0)
 # payoff_matrix_att = np.delete(payoff_matrix_att, np.arange(51, 81), 1)
 
-child_partition = {'RS': 80, 'SP': 80}
-ec.do_evaluation(payoff_matrix_def, payoff_matrix_att, child_partition)
+# child_partition = {'RS': 80, 'SP': 80}
+# ec.do_evaluation(payoff_matrix_def, payoff_matrix_att, child_partition)
 
 # curves_dict_def, curves_dict_att = ec.formal_regret_curves(payoff_matrix_def, payoff_matrix_att, child_partition)
 # save_path = os.getcwd() + '/drawing/matrix/'
@@ -31,5 +32,12 @@ ec.do_evaluation(payoff_matrix_def, payoff_matrix_att, child_partition)
 
 
 
-
+# init
+child_partition = {'RS': 40, 'FIC': 40, 'Weighted': 40, 'RM': 24, 'BR_fic': 40,'BR_weighted': 40,'BR_SP': 40}
+# print(find_heuristic_position(child_partition))
+ec.do_evaluation(payoff_matrix_def, payoff_matrix_att, child_partition)
+# curves_dict_def, curves_dict_att = ec.formal_regret_curves(payoff_matrix_def, payoff_matrix_att, child_partition)
+# save_path = os.getcwd() + '/drawing/matrix/'
+# fp.save_pkl(curves_dict_att, save_path + 'curves_dict_att.pkl')
+# fp.save_pkl(curves_dict_def, save_path + 'curves_dict_def.pkl')
 

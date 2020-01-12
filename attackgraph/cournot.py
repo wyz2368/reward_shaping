@@ -211,8 +211,8 @@ def run(p1_payoff, p2_payoff):
             print("x1:", str_p1)
             print("x2:", str_p2)
 
-p1_payoff, p2_payoff = create_payoff_matrix()
-run(p1_payoff, p2_payoff)
+# p1_payoff, p2_payoff = create_payoff_matrix()
+# run(p1_payoff, p2_payoff)
 
 
 

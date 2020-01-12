@@ -40,7 +40,7 @@ def gambit_analysis(timeout):
     command_str = "gambit-lcp -q " + os.getcwd() + "/gambit_data/payoffmatrix.nfg -d 8 > " + os.getcwd() + "/gambit_data/nash.txt"
     subproc.call_and_wait_with_timeout(command_str, timeout)
 
-# load the first NE found.
+# load the first NE found. This function assumes the symmetric of the payoff matrix.
 def decode_gambit_file():
     nash_DIR = os.getcwd() + '/gambit_data/nash.txt'
     if not fp.isExist(nash_DIR):
@@ -63,12 +63,36 @@ def decode_gambit_file():
 
     return nash_att, nash_def
 
-def do_gambit_analysis(poDef, poAtt, maxent=False, minent=False, num_nash=None, return_list=False):
+def decode_gambit_file_asym(str_num_first_player):
+    nash_DIR = os.getcwd() + '/gambit_data/nash.txt'
+    if not fp.isExist(nash_DIR):
+        raise ValueError("nash.txt file does not exist!")
+    with open(nash_DIR,'r') as f:
+        nash = f.readline()
+        if len(nash.strip()) == 0:
+            return 0,0
+
+    nash = nash[3:]
+    nash = nash.split(',')
+    new_nash = []
+    for i in range(len(nash)):
+        new_nash.append(convert(nash[i]))
+
+    new_nash = np.array(new_nash)
+    new_nash = np.round(new_nash, decimals=8)
+    nash_def = new_nash[:str_num_first_player]
+    nash_att = new_nash[str_num_first_player:]
+
+    return nash_att, nash_def
+
+def do_gambit_analysis(poDef, poAtt, maxent=False, minent=False, num_nash=None, return_list=False, str_num_first_player=None):
     timeout = 600
     encode_gambit_file(poDef, poAtt) #TODO:change timeout adaptive
     while True:
         gambit_analysis(timeout)
-        if not maxent and not minent and not return_list:
+        if str_num_first_player is not None:
+            nash_att, nash_def = decode_gambit_file_asym(str_num_first_player)
+        elif not maxent and not minent and not return_list:
             # pick random NE.
             nash_att, nash_def = decode_gambit_file()
         elif return_list:

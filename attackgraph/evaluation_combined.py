@@ -78,8 +78,8 @@ def NE_regret(regret_vect_att, regret_vect_def, payoffmatrix_att, payoffmatrix_d
         submatrix_att = payoffmatrix_att[start:end, start:end]
         submatrix_def = payoffmatrix_def[start:end, start:end]
 
-        # submatrix_att = payoffmatrix_att[start:start+30, start:start+30]
-        # submatrix_def = payoffmatrix_def[start:start+30, start:start+30]
+        # submatrix_att = payoffmatrix_att[start:start+32, start:start+32]
+        # submatrix_def = payoffmatrix_def[start:start+32, start:start+32]
 
         nash_att, nash_def = do_gambit_analysis(submatrix_def, submatrix_att, maxent=True)
 
@@ -99,11 +99,11 @@ def regret_fixed_matrix(payoffmatrix_def, payoffmatrix_att, child_partition):
     for method in child_partition:
         start, end = positions[method]
         print(start, end)
-        submatrix_att = payoffmatrix_att[start:end, start:end]
-        submatrix_def = payoffmatrix_def[start:end, start:end]
+        # submatrix_att = payoffmatrix_att[start:end, start:end]
+        # submatrix_def = payoffmatrix_def[start:end, start:end]
 
-        # submatrix_att = payoffmatrix_att[start:start+40, start:start+40]
-        # submatrix_def = payoffmatrix_def[start:start+40, start:start+40]
+        submatrix_att = payoffmatrix_att[start:start+32, start:start+32]
+        submatrix_def = payoffmatrix_def[start:start+32, start:start+32]
 
         nash_att, nash_def = do_gambit_analysis(submatrix_def, submatrix_att, maxent=True)
 
@@ -112,13 +112,13 @@ def regret_fixed_matrix(payoffmatrix_def, payoffmatrix_att, child_partition):
         ne_payoff_def = np.sum(nash_def * submatrix_def * nash_att)
         ne_payoff_att = np.sum(nash_def * submatrix_att * nash_att)
 
-        dev_def = np.max(np.sum(payoffmatrix_def[:, start:end] * nash_att, axis=1))
-        dev_att = np.max(np.sum(nash_def * payoffmatrix_att[start:end, :], axis=0))
+        # dev_def = np.max(np.sum(payoffmatrix_def[:, start:end] * nash_att, axis=1))
+        # dev_att = np.max(np.sum(nash_def * payoffmatrix_att[start:end, :], axis=0))
 
-        # dev_def = np.max(np.sum(payoffmatrix_def[:, start:start+40] * nash_att, axis=1))
-        print(np.argmax(np.sum(payoffmatrix_def[:, start:end] * nash_att, axis=1)))
-        # dev_att = np.max(np.sum(nash_def * payoffmatrix_att[start:start+40, :], axis=0))
-        print(np.argmax(np.sum(nash_def * payoffmatrix_att[start:end, :], axis=0)))
+        dev_def = np.max(np.sum(payoffmatrix_def[:, start:start+32] * nash_att, axis=1))
+        # print(np.argmax(np.sum(payoffmatrix_def[:, start:end] * nash_att, axis=1)))
+        dev_att = np.max(np.sum(nash_def * payoffmatrix_att[start:start+32, :], axis=0))
+        # print(np.argmax(np.sum(nash_def * payoffmatrix_att[start:end, :], axis=0)))
 
         print('------------------------------------------')
         print("The current method is ", method)
@@ -133,13 +133,18 @@ def formal_regret_curves(payoffmatrix_def, payoffmatrix_att, child_partition):
     for method in child_partition:
         curves_dict_def[method] = []
         curves_dict_att[method] = []
-    for epoch in np.arange(80):
+    for epoch in np.arange(40):
         for method in child_partition:
+            if method == 'RM':
+                continue
+
             start, end = positions[method]
             print(start, end)
 
             submatrix_att = payoffmatrix_att[start:start+epoch+1, start:start+epoch+1]
             submatrix_def = payoffmatrix_def[start:start+epoch+1, start:start+epoch+1]
+
+            # print('X:', start, start+epoch+1)
 
             nash_att, nash_def = do_gambit_analysis(submatrix_def, submatrix_att, maxent=True)
 
@@ -185,8 +190,9 @@ def regret_curves(payoffmatrix_def, payoffmatrix_att, child_partition):
             subsubgame_att = subgame_att[:epoch, :epoch]
 
             # TODO: Error: line 4:2: Expecting outcome or payoff
-            nash_att, nash_def = do_gambit_analysis(subsubgame_def, subsubgame_att, maxent=True)
+            nash_att, nash_def = do_gambit_analysis(subsubgame_def, subsubgame_att, maxent=False, minent=True)
 
+            # TODO: Is this correct?? NO.
             nash_def = zeros[len(nash_def)] + nash_def
             nash_att = zeros[len(nash_att)] + nash_att
 
@@ -257,28 +263,27 @@ def vector_convertor(ne_dict):
 
 def do_evaluation(payoffmatrix_def, payoffmatrix_att, child_partition):
     regret_fixed_matrix(payoffmatrix_def, payoffmatrix_att, child_partition)
-    nash_att_list, nash_def_list = find_all_NE(payoffmatrix_def, payoffmatrix_att)
-    # print("The number of NE is ", len(nash_def_list))
-    nash = zip(nash_att_list, nash_def_list)
-    regret_dict_list = []
-    for nash_att, nash_def in nash:
-        # print(nash_att[:81], '\n', nash_att[81:])
-        # print(nash_def[:81], '\n', nash_def[81:])
-        regret_att, regret_def = regret(nash_att, nash_def, payoffmatrix_att, payoffmatrix_def)
-        regret_dict = NE_regret(regret_att, regret_def, payoffmatrix_att, payoffmatrix_def, child_partition)
-        regret_dict_list.append(regret_dict)
-        for method in regret_dict:
-            print('------------------------------------------')
-            print("The current method is ", method)
-            print("The defender's regret is", regret_dict[method][0])
-            print("The attacker's regret is", regret_dict[method][1])
-        print("==================================================")
-
-
-
-    # save_path = os.getcwd() + '/combined_game/data/'
-    save_path = os.getcwd() + '/drawing/matrix/'
-    fp.save_pkl(regret_dict_list, save_path + 'regret_dict_list.pkl')
+    # nash = find_all_NE(payoffmatrix_def, payoffmatrix_att)
+    # # print("The number of NE is ", len(nash_def_list))
+    # regret_dict_list = []
+    # for nash_att, nash_def in nash:
+    #     # print(nash_att[:81], '\n', nash_att[81:])
+    #     # print(nash_def[:81], '\n', nash_def[81:])
+    #     regret_att, regret_def = regret(nash_att, nash_def, payoffmatrix_att, payoffmatrix_def)
+    #     regret_dict = NE_regret(regret_att, regret_def, payoffmatrix_att, payoffmatrix_def, child_partition)
+    #     regret_dict_list.append(regret_dict)
+    #     for method in regret_dict:
+    #         print('------------------------------------------')
+    #         print("The current method is ", method)
+    #         print("The defender's regret is", regret_dict[method][0])
+    #         print("The attacker's regret is", regret_dict[method][1])
+    #     print("==================================================")
+    #
+    #
+    #
+    # # save_path = os.getcwd() + '/combined_game/data/'
+    # save_path = os.getcwd() + '/drawing/matrix/'
+    # fp.save_pkl(regret_dict_list, save_path + 'regret_dict_list.pkl')
 
     # curves_att, curves_def = regret_curves(payoffmatrix_def, payoffmatrix_att, child_partition)
     # print(curves_att)
